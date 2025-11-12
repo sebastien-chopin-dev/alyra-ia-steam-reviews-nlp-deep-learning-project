@@ -1,0 +1,12 @@
+[MASTER]
+disable=
+    C0114, # missing-module-docstring
+    C0115, # missin-class-docstring
+    C0116, # missing-function-docstring
+    C0301, # line too long
+    W0718,
+    W0719,
+    W0603, # globale variables
+    W0602,
+    W0622,
+    W0105

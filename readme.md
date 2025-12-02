@@ -24,5 +24,12 @@ https://www.kaggle.com/docs/api#authentication
 
 token at ~/.kaggle/kaggle.json
 
+### API Docker build
+
+cd api
+docker-compose up --build
+
+http://localhost:8000
+
 
 

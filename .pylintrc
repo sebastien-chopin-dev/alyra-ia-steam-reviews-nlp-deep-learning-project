@@ -9,4 +9,5 @@ disable=
     W0603, # globale variables
     W0602,
     W0622,
-    W0105
+    W0105,
+    C0103

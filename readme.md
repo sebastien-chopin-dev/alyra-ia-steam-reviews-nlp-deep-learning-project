@@ -31,5 +31,9 @@ docker-compose up --build
 
 http://localhost:8000
 
+### Scripts python
+
+python -m src.reviews_en_finetuning_models
+
 
 

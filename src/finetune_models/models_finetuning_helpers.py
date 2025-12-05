@@ -1,13 +1,14 @@
 import os
+import time
+from datetime import timedelta
 
-import numpy as np
 import tensorflow as tf
 
 # KerasNLP pour BERT
 import keras_nlp
 import keras
 from keras import layers
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau, TensorBoard
 
 import pandas as pd
 import kagglehub
@@ -64,16 +65,6 @@ def create_train_test_eval_split(df: pd.DataFrame, config: dict):
     print(f"   - Train: {len(X_train)} samples ({len(X_train)/len(X)*100:.1f}%)")
     print(f"   - Val:   {len(X_val)} samples ({len(X_val)/len(X)*100:.1f}%)")
     print(f"   - Test:  {len(X_test)} samples ({len(X_test)/len(X)*100:.1f}%)")
-
-    # # Statistiques de longueur de texte
-    # train_lengths = [len(text.split()) for text in X_train_text]
-    # print(f"\nLongueur moyenne des reviews Train: {np.mean(train_lengths):.0f} mots")
-
-    # val_lengths = [len(text.split()) for text in X_val_text]
-    # print(f"\nLongueur moyenne des reviews Val: {np.mean(val_lengths):.0f} mots")
-
-    # test_lengths = [len(text.split()) for text in X_test_text]
-    # print(f"\nLongueur moyenne des reviews Test: {np.mean(test_lengths):.0f} mots")
 
     return X_train, y_train, X_val, y_val, X_test, y_test
 
@@ -179,19 +170,14 @@ def compile_and_train_model(
         monitor="val_loss", factor=0.5, patience=1, min_lr=1e-7, verbose=1
     )
 
-    callbacks_list = [early_stopping, reduce_lr]
+    tensorboard = TensorBoard(
+        log_dir=f"{config["SAVE_FOLDER"]}/logs", histogram_freq=1, write_graph=True
+    )
+
+    callbacks_list = [early_stopping, reduce_lr, tensorboard]
 
     print("\nDébut de l'entraînement...")
     print("=" * 80)
-
-    # tensorboard = TensorBoard(
-    #     log_dir='./logs',
-    #     histogram_freq=1,
-    #     write_graph=True
-    # )
-
-    # # Dans le fit
-    # model.fit(..., callbacks=[tensorboard])
 
     history_bert_finetuned = bert_finetuned_model.fit(
         X_train_bert,
@@ -270,7 +256,9 @@ def test_on_new_reviews(finetuned_model: keras.Model):
         print("-" * 90)
 
 
-def save_model_spec_and_eval(config: dict, test_loss, test_accuracy, report_dict, cm):
+def save_model_spec_and_eval(
+    config: dict, test_loss, test_accuracy, report_dict, cm, duration_str
+):
     eval_results = {
         "timestamp": pd.Timestamp.now(),
         "model_name": config.get("NAME_TRAIN_CONFIG", "bert_model"),
@@ -306,6 +294,8 @@ def save_model_spec_and_eval(config: dict, test_loss, test_accuracy, report_dict
         "false_positive": int(cm[0, 1]),
         "false_negative": int(cm[1, 0]),
         "true_positive": int(cm[1, 1]),
+        # Durée d'entraînement
+        "duration": duration_str,
     }
 
     # Créer un DataFrame avec une seule ligne

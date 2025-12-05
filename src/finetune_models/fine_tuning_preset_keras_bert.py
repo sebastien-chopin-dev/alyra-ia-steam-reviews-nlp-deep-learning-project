@@ -4,6 +4,8 @@
 
 import warnings
 import os
+import time
+from datetime import timedelta
 
 from src.finetune_models.models_finetuning_helpers import (
     compile_and_train_model,
@@ -54,6 +56,8 @@ def train_bert_base_model(config: dict):
     print(f"   - Batch size: {config["BATCH_SIZE"]}")
     print(f"   - Epochs: {config["EPOCHS"]}")
     print(f"   - Learning rate: {config["LEARNING_RATE"]}")
+
+    start_time = time.time()
 
     init_gpu_for_tf()  # Utilisation de la GPU pour TensorFlow (si disponible)
     init_graph_plt()  # Initialisation de matplotlib (pour graphiques)
@@ -106,8 +110,16 @@ def train_bert_base_model(config: dict):
         bert_finetuned_model, X_test_bert, y_test, config
     )
 
+    # Calculer la durée
+    training_duration = time.time() - start_time
+    duration_str = str(timedelta(seconds=int(training_duration)))
+
+    print(f"\nDurée d'entraînement: {duration_str}")
+
     # Sauvegarde des résultats pour comparaison ultérieur
-    save_model_spec_and_eval(config, test_loss, test_accuracy, report_dict, cm)
+    save_model_spec_and_eval(
+        config, test_loss, test_accuracy, report_dict, cm, duration_str
+    )
 
     model_path = f"{config['SAVE_FOLDER']}/finetuned_model.keras"
     bert_finetuned_model.save(model_path)

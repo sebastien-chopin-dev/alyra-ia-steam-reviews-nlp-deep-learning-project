@@ -35,5 +35,9 @@ http://localhost:8000
 
 python -m src.reviews_en_finetuning_models
 
+### TensorBoard
+
+tensorboard --logdir=outputs/reports/bert_base_en_test/logs
+
 
 

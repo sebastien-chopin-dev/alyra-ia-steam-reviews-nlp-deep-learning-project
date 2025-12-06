@@ -39,5 +39,25 @@ python -m src.reviews_en_finetuning_models
 
 tensorboard --logdir=outputs/reports/bert_base_en_test/logs
 
+### Stratégies d'entrainement
+
+Phase 1 :  Tests rapide pour trouver les meilleures hyper paramétres:
+- Sur un subset des reviews limité (50 000 au lieu de 200 000) test de plusieurs configurations 
+de learning rate et de plusieurs architectures de couches de sortie finetuning. (12 configurations)
+- Utilisation d'un modèle bert plus léger 
+- "bert_small_en_uncased" 29 M de paramétres.
+(Environ 2 minutes par entrainement avec RTX 4070)
+
+Phase 2: Prendre les 3 meilleures combinaisons d'hyper paramétres et tests sur modèles standard
+Subset plus large (100000 reviews)
+- "distil_bert_base_en_uncased" 66M de params
+- "bert_base_en_uncased" 110M de params
+
+Phase 3: Prendre la meilleure combinaison d'hyper paramétre et tests sur modèles plus performant:
+Subset complet (200000 reviews)
+- "bert_base_en_uncased" 110M de params
+- "roberta_base_en" 125M de params
+- "deberta_v3_small_en" 86M
+
 
 

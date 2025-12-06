@@ -7,6 +7,8 @@ import os
 import time
 from datetime import timedelta
 
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+
 from src.finetune_models.models_finetuning_helpers import (
     compile_and_train_model,
     create_train_test_eval_split,
@@ -41,6 +43,7 @@ bert_base_model_config = {
     "BATCH_SIZE": 32,
     "EPOCHS": 10,
     "LEARNING_RATE": 3e-5,
+    "CALLBACK_OPTION": 1,
     "LAYER_ARCHITECTURE": 0,
     "PLT_COLOR": "green",
 }
@@ -56,6 +59,7 @@ def train_bert_base_model(config: dict):
     print(f"   - Batch size: {config["BATCH_SIZE"]}")
     print(f"   - Epochs: {config["EPOCHS"]}")
     print(f"   - Learning rate: {config["LEARNING_RATE"]}")
+    print(f"   - Callback strategie: {config["CALLBACK_OPTION"]}")
 
     start_time = time.time()
 

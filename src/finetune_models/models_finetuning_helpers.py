@@ -47,6 +47,8 @@ def create_train_test_eval_split(df: pd.DataFrame, config: dict):
     else:
         df_reviews_sample = df.copy()
 
+    config["REVIEWS_SUBSET"] = len(df_reviews_sample)
+
     # Extraction des features et labels
     X = df_reviews_sample["review"].values
     y = df_reviews_sample["voted_up"].values
@@ -122,17 +124,17 @@ def instantiate_bert_model_finetuned(config: dict):
         x = layers.Dense(64, activation="relu")(x)
         x = layers.Dropout(0.3)(x)
     elif architecture_layer == 2:  # Architecture plus équilibré
-        x = layers.Dropout(0.2)(x)
+        x = layers.Dropout(0.2)(cls_token)
         x = layers.Dense(128, activation="relu")(x)
         x = layers.Dropout(0.2)(x)
     elif architecture_layer == 3:  # Architecture plus complexe
-        x = layers.Dropout(0.3)(x)
+        x = layers.Dropout(0.3)(cls_token)
         x = layers.Dense(256, activation="relu")(x)
         x = layers.Dropout(0.3)(x)
         x = layers.Dense(64, activation="relu")(x)
         x = layers.Dropout(0.3)(x)
     else:
-        x = layers.Dropout(0.1)(x)
+        x = layers.Dropout(0.1)(cls_token)
 
     # Nombre de couche Version auto avec optuna
     # study = optuna.create_study(direction="maximize")
@@ -160,21 +162,59 @@ def compile_and_train_model(
     )
     print("Modèle compilé")
 
-    # Early Stopping
-    early_stopping = EarlyStopping(
-        monitor="val_loss", patience=2, restore_best_weights=True, verbose=1, mode="min"
-    )
-
-    # Reduce Learning Rate on Plateau
-    reduce_lr = ReduceLROnPlateau(
-        monitor="val_loss", factor=0.5, patience=1, min_lr=1e-7, verbose=1
-    )
+    if config["CALLBACK_OPTION"] == 0:
+        # Pour tests rapides agressif
+        callback_es = EarlyStopping(
+            monitor="val_loss", patience=2, restore_best_weights=True, verbose=1
+        )
+        callback_lr = ReduceLROnPlateau(
+            monitor="val_loss", factor=0.5, patience=1, min_lr=1e-7, verbose=1
+        )
+    elif config["CALLBACK_OPTION"] == 1:
+        # Pour fine-tuning BERT (équilibré)
+        callback_es = EarlyStopping(
+            monitor="val_loss",
+            patience=3,
+            restore_best_weights=True,
+            min_delta=0.001,
+            verbose=1,
+        )
+        callback_lr = ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.3,
+            patience=2,
+            min_lr=1e-7,
+            cooldown=1,
+            min_delta=0.001,
+            verbose=1,
+        )
+    else:
+        # Pour entraînement long (patient)
+        callback_es = EarlyStopping(
+            monitor="val_loss",
+            patience=5,
+            restore_best_weights=True,
+            min_delta=0.0005,
+            verbose=1,
+        )
+        callback_lr = ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.2,
+            patience=3,
+            min_lr=1e-8,
+            cooldown=2,
+            verbose=1,
+        )
 
     tensorboard = TensorBoard(
         log_dir=f"{config["SAVE_FOLDER"]}/logs", histogram_freq=1, write_graph=True
     )
 
-    callbacks_list = [early_stopping, reduce_lr, tensorboard]
+    callbacks_list = [
+        callback_es,
+        callback_lr,
+        tensorboard,
+    ]
 
     print("\nDébut de l'entraînement...")
     print("=" * 80)
@@ -269,6 +309,7 @@ def save_model_spec_and_eval(
         "epochs": config.get("EPOCHS", 3),
         "learning_rate": config.get("LEARNING_RATE", 5e-5),
         "layer_architecture": config.get("LAYER_ARCHITECTURE", 0),
+        "callback_strategy": config.get("CALLBACK_OPTION", 0),
         # Métriques globales
         "test_loss": test_loss,
         "test_accuracy": test_accuracy,
@@ -304,7 +345,7 @@ def save_model_spec_and_eval(
     outputs_dir = get_outputs_path()
 
     # Chemin du fichier CSV
-    csv_path = f"{outputs_dir}/evaluation_results.csv"
+    csv_path = f"{outputs_dir}/evaluation_results{config['PHASE_NAME']}.csv"
 
     # Sauvegarder (append si le fichier existe déjà)
     if os.path.exists(csv_path):

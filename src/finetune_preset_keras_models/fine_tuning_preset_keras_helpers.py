@@ -2,6 +2,7 @@ import os
 import time
 from datetime import timedelta
 
+import psutil
 import tensorflow as tf
 
 # KerasNLP pour BERT
@@ -18,6 +19,186 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 from src.utils.file_system_utils import get_outputs_path
 from src.utils.stats_utils import show_confusion_matrix, column_summary
+
+
+def print_memory_usage():
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+
+    print("\nUtilisation mémoire:")
+    print(f"   RAM utilisée: {mem_info.rss / 1024**3:.2f} GB")
+    print(f"   RAM disponible: {psutil.virtual_memory().available / 1024**3:.2f} GB")
+    print(f"   RAM totale: {psutil.virtual_memory().total / 1024**3:.2f} GB")
+
+
+class MemoryCallback(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        print_memory_usage()
+
+
+def get_preprocessor_and_backbone(config):
+
+    preset_name = config["PREPROCESSOR_PRESET_NAME"]
+    preset_lower = preset_name.lower()
+    use_sequence_output = True
+
+    # DistilBERT
+    if "distil" in preset_lower and "bert" in preset_lower:
+        preprocessor = keras_nlp.models.DistilBertPreprocessor.from_preset(
+            preset_name, sequence_length=config["SEQUENCE_LENGTH"]
+        )
+        backbone = keras_nlp.models.DistilBertBackbone.from_preset(
+            preset_name, trainable=True
+        )
+        use_sequence_output = False
+    elif "deberta" in preset_lower:
+        preprocessor = keras_nlp.models.DebertaV3Preprocessor.from_preset(
+            preset_name, sequence_length=config["SEQUENCE_LENGTH"]
+        )
+        backbone = keras_nlp.models.DebertaV3Backbone.from_preset(
+            preset_name, trainable=True
+        )
+        use_sequence_output = False
+    # XLM-RoBERTa
+    elif "xlm_roberta" in preset_lower:
+        preprocessor = keras_nlp.models.XLMRobertaPreprocessor.from_preset(
+            preset_name, sequence_length=config["SEQUENCE_LENGTH"]
+        )
+        backbone = keras_nlp.models.XLMRobertaBackbone.from_preset(
+            preset_name, trainable=True
+        )
+    elif "roberta" in preset_lower:
+        preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset(
+            preset_name, sequence_length=config["SEQUENCE_LENGTH"]
+        )
+        backbone = keras_nlp.models.RobertaBackbone.from_preset(
+            preset_name, trainable=True
+        )
+    # BERT (standard)
+    elif "bert" in preset_lower:
+        preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
+            preset_name, sequence_length=config["SEQUENCE_LENGTH"]
+        )
+        backbone = keras_nlp.models.BertBackbone.from_preset(
+            preset_name, trainable=True
+        )
+
+    else:
+        raise ValueError(f"Preset '{preset_name}' non supporté")
+
+    return preprocessor, backbone, use_sequence_output
+
+
+def create_tf_dataset(X_preprocessed, y, config):
+    # Evite de charger tout en mémoire pour les gros modèles
+    preset_name = config["PREPROCESSOR_PRESET_NAME"]
+    preset_lower = preset_name.lower()
+
+    # DistilBERT - deberta - PAS de segment_ids
+    if "distil" in preset_lower or "deberta_v3" in preset_lower:
+        dataset = tf.data.Dataset.from_tensor_slices(
+            (
+                {
+                    "token_ids": X_preprocessed["token_ids"],
+                    "padding_mask": X_preprocessed["padding_mask"],
+                },
+                y,
+            )
+        )
+    elif "xlm_roberta" in preset_lower:
+        dataset = tf.data.Dataset.from_tensor_slices(
+            (
+                {
+                    "token_ids": X_preprocessed["token_ids"],
+                    "segment_ids": X_preprocessed["segment_ids"],
+                    "padding_mask": X_preprocessed["padding_mask"],
+                },
+                y,
+            )
+        )
+    elif "roberta" in preset_lower:
+        dataset = tf.data.Dataset.from_tensor_slices(
+            (
+                {
+                    "token_ids": X_preprocessed["token_ids"],
+                    "padding_mask": X_preprocessed["padding_mask"],
+                },
+                y,
+            )
+        )
+    # BERT AVEC segment_ids
+    else:
+        dataset = tf.data.Dataset.from_tensor_slices(
+            (
+                {
+                    "token_ids": X_preprocessed["token_ids"],
+                    "segment_ids": X_preprocessed["segment_ids"],
+                    "padding_mask": X_preprocessed["padding_mask"],
+                },
+                y,
+            )
+        )
+
+    # Shuffle, batch, prefetch
+    dataset = dataset.shuffle(buffer_size=10000)
+    dataset = dataset.batch(config["BATCH_SIZE"])
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+    return dataset
+
+
+def create_model_inputs(config):
+
+    sequence_length = config["SEQUENCE_LENGTH"]
+    preset_name = config["PREPROCESSOR_PRESET_NAME"]
+    preset_lower = preset_name.lower()
+
+    # DistilBERT - deberta - PAS de segment_ids
+    if "distil" in preset_lower or "deberta_v3" in preset_lower:
+        inputs = {
+            "token_ids": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="token_ids"
+            ),
+            "padding_mask": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="padding_mask"
+            ),
+        }
+    elif "xlm_roberta" in preset_lower:
+        inputs = {
+            "token_ids": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="token_ids"
+            ),
+            "segment_ids": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="segment_ids"
+            ),
+            "padding_mask": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="padding_mask"
+            ),
+        }
+    elif "roberta" in preset_lower:
+        inputs = {
+            "token_ids": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="token_ids"
+            ),
+            "padding_mask": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="padding_mask"
+            ),
+        }
+    # BERT AVEC segment_ids
+    else:
+        inputs = {
+            "token_ids": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="token_ids"
+            ),
+            "segment_ids": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="segment_ids"
+            ),
+            "padding_mask": layers.Input(
+                shape=(sequence_length,), dtype=tf.int32, name="padding_mask"
+            ),
+        }
+
+    return inputs
 
 
 def load_and_verif_reviews_datas(config: dict):
@@ -71,11 +252,9 @@ def create_train_test_eval_split(df: pd.DataFrame, config: dict):
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
-def preprocess_data(X_train, X_val, X_test, config: dict):
+def keras_preset_preprocess_data(X_train, X_val, X_test, config: dict):
     print("\nInitialisation du preprocessor BERT...")
-    preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
-        config["PREPROCESSOR_PRESET_NAME"], sequence_length=config["SEQUENCE_LENGTH"]
-    )
+    preprocessor, backbone, use_sequence_output = get_preprocessor_and_backbone(config)
     print("Preprocessor chargé")
 
     print("\nPreprocessing des données avec BERT...")
@@ -87,32 +266,29 @@ def preprocess_data(X_train, X_val, X_test, config: dict):
     return X_train_bert, X_val_bert, X_test_bert
 
 
-def instantiate_bert_model_finetuned(config: dict):
-    print("\n Construction du modèle BERT...")
-
+def instantiate_keras_preset_model_finetuned(config: dict):
     # Paramètres
     preset_name = config["MODEL_PRESET_NAME"]
     architecture_layer = config["LAYER_ARCHITECTURE"]
 
+    print(f"\n Construction du modèle Preset Keras {preset_name}...")
+
     # BERT backbone - TOUS LES POIDS ENTRAÎNABLES
-    bert_backbone = keras_nlp.models.BertBackbone.from_preset(
-        preset_name, trainable=True  # FINE-TUNING
+    preprocessor, bert_backbone, use_sequence_output = get_preprocessor_and_backbone(
+        config
     )
 
     # Inputs (données déjà preprocessée en amont)
-    inputs = {
-        "token_ids": layers.Input(shape=(128,), dtype=tf.int32, name="token_ids"),
-        "segment_ids": layers.Input(shape=(128,), dtype=tf.int32, name="segment_ids"),
-        "padding_mask": layers.Input(shape=(128,), dtype=tf.int32, name="padding_mask"),
-    }
+    inputs = create_model_inputs(config)
 
     # Construction du modèle avec preprocess intégré mais à chaque epochs
     # inputs = keras.Input(shape=(), dtype="string", name="text_input")
     # x = preprocessor(inputs)
 
-    # BERT
-    bert_output = bert_backbone(inputs)["sequence_output"]
-    # x = bert_backbone(x) sequence_output sortie par défaut
+    if use_sequence_output:  # BERT
+        bert_output = bert_backbone(inputs)["sequence_output"]
+    else:  # DistillBERT
+        bert_output = bert_backbone(inputs)
 
     # Extraction du token [CLS] (premier token)
     cls_token = bert_output[:, 0, :]
@@ -147,21 +323,7 @@ def instantiate_bert_model_finetuned(config: dict):
     return model
 
 
-def compile_and_train_model(
-    bert_finetuned_model: keras.Model,
-    X_train_bert,
-    y_train,
-    X_val_bert,
-    y_val,
-    config: dict,
-):
-    bert_finetuned_model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=config["LEARNING_RATE"]),
-        loss="binary_crossentropy",
-        metrics=["accuracy"],
-    )
-    print("Modèle compilé")
-
+def get_callback_from_config(config):
     if config["CALLBACK_OPTION"] == 0:
         # Pour tests rapides agressif
         callback_es = EarlyStopping(
@@ -175,6 +337,24 @@ def compile_and_train_model(
         callback_es = EarlyStopping(
             monitor="val_loss",
             patience=3,
+            restore_best_weights=True,
+            min_delta=0.001,
+            verbose=1,
+        )
+        callback_lr = ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.3,
+            patience=2,
+            min_lr=1e-7,
+            cooldown=1,
+            min_delta=0.001,
+            verbose=1,
+        )
+    elif config["CALLBACK_OPTION"] == 2:
+        # Pour fine-tuning BERT (équilibré un petit peu plus patient)
+        callback_es = EarlyStopping(
+            monitor="val_loss",
+            patience=4,
             restore_best_weights=True,
             min_delta=0.001,
             verbose=1,
@@ -206,28 +386,56 @@ def compile_and_train_model(
             verbose=1,
         )
 
+    return callback_es, callback_lr
+
+
+def compile_and_train_model(
+    bert_finetuned_model: keras.Model,
+    X_train_bert,
+    y_train,
+    X_val_bert,
+    y_val,
+    config: dict,
+):
+    bert_finetuned_model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=config["LEARNING_RATE"]),
+        loss="binary_crossentropy",
+        metrics=["accuracy"],
+    )
+    print("Modèle compilé")
+
     tensorboard = TensorBoard(
         log_dir=f"{config["SAVE_FOLDER"]}/logs", histogram_freq=1, write_graph=True
     )
 
-    callbacks_list = [
-        callback_es,
-        callback_lr,
-        tensorboard,
-    ]
+    callback_es, callback_lr = get_callback_from_config(config)
+
+    callbacks_list = [callback_es, callback_lr, tensorboard, MemoryCallback()]
 
     print("\nDébut de l'entraînement...")
     print("=" * 80)
 
-    history_bert_finetuned = bert_finetuned_model.fit(
-        X_train_bert,
-        y_train,
-        validation_data=(X_val_bert, y_val),
-        epochs=config["EPOCHS"],
-        batch_size=config["BATCH_SIZE"],
-        callbacks=callbacks_list,
-        verbose=1,
-    )
+    if config["USE_DATASET"] is True:
+        train_dataset = create_tf_dataset(X_train_bert, y_train, config)
+        val_dataset = create_tf_dataset(X_val_bert, y_val, config)
+
+        history_bert_finetuned = bert_finetuned_model.fit(
+            train_dataset,
+            validation_data=val_dataset,
+            epochs=config["EPOCHS"],
+            callbacks=callbacks_list,
+            verbose=1,
+        )
+    else:
+        history_bert_finetuned = bert_finetuned_model.fit(
+            X_train_bert,
+            y_train,
+            validation_data=(X_val_bert, y_val),
+            epochs=config["EPOCHS"],
+            batch_size=config["BATCH_SIZE"],
+            callbacks=callbacks_list,
+            verbose=1,
+        )
 
     print("\nEntraînement terminé!")
 
@@ -345,7 +553,7 @@ def save_model_spec_and_eval(
     outputs_dir = get_outputs_path()
 
     # Chemin du fichier CSV
-    csv_path = f"{outputs_dir}/evaluation_results{config['PHASE_NAME']}.csv"
+    csv_path = f"{outputs_dir}/evaluation_results_{config['PHASE_NAME']}.csv"
 
     # Sauvegarder (append si le fichier existe déjà)
     if os.path.exists(csv_path):

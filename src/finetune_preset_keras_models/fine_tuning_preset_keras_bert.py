@@ -7,15 +7,13 @@ import os
 import time
 from datetime import timedelta
 
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
-
-from src.finetune_models.models_finetuning_helpers import (
+from src.finetune_preset_keras_models.fine_tuning_preset_keras_helpers import (
     compile_and_train_model,
     create_train_test_eval_split,
     evaluate_model,
-    instantiate_bert_model_finetuned,
+    instantiate_keras_preset_model_finetuned,
     load_and_verif_reviews_datas,
-    preprocess_data,
+    keras_preset_preprocess_data,
     save_model_spec_and_eval,
 )
 
@@ -45,6 +43,7 @@ bert_base_model_config = {
     "LEARNING_RATE": 3e-5,
     "CALLBACK_OPTION": 1,
     "LAYER_ARCHITECTURE": 0,
+    "USE_DATASET": False,
     "PLT_COLOR": "green",
 }
 
@@ -77,12 +76,12 @@ def train_bert_base_model(config: dict):
         df_reviews, config
     )
 
-    X_train_bert, X_val_bert, X_test_bert = preprocess_data(
+    X_train_bert, X_val_bert, X_test_bert = keras_preset_preprocess_data(
         X_train, X_val, X_test, config
     )
 
     # bert_small_en_uncased
-    bert_finetuned_model = instantiate_bert_model_finetuned(config)
+    bert_finetuned_model = instantiate_keras_preset_model_finetuned(config)
 
     print("\nArchitecture du modèle:")
     bert_finetuned_model.summary()

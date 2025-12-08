@@ -22,9 +22,9 @@ def main():
     path = kagglehub.dataset_download("kieranpoc/steam-reviews")
     print("Path to dataset files:", path)
 
-    # Traitement des reviews anglaises
+    # Filter and Process english reviews to csv file
     config_reviews_en = {
-        "PROCESS_NAME": "Traitement reviews anglaises",
+        "PROCESS_NAME": "Create filtered preprocessed english reviews file",
         "INPUT_FILE_NAME": "en_weighted_score_above_06.csv",
         "EXPORT_FILE_NAME": "reviews_en_processed.csv",
         "PLAY_TIME_FOREVER": 30,  # minutes passées sur le jeu avant d'écrire la review
@@ -38,13 +38,13 @@ def main():
     }
 
     try:
-        df_balanced_en = process_reviews(path, config_reviews_en)
+        process_reviews(path, config_reviews_en)
     except Exception as e:
         print(f"\nProblème lors du prétraitement du fichier review en. {e}")
 
-    # Traitement des reviews françaises
+    # Filter and Process french reviews to csv file
     config_reviews_fr = {
-        "PROCESS_NAME": "Traitement reviews françaises",
+        "PROCESS_NAME": "Create filtered preprocessed fr reviews file",
         "INPUT_FILE_NAME": "fr_all_reviews.csv",
         "EXPORT_FILE_NAME": "reviews_fr_processed.csv",
         "PLAY_TIME_FOREVER": 30,
@@ -58,13 +58,13 @@ def main():
     }
 
     try:
-        df_balanced_fr = process_reviews(path, config_reviews_fr)
+        process_reviews(path, config_reviews_fr)
     except Exception as e:
-        print(f"\nProblème lors du prétraitement du fichier review fr. {e}")
+        print(f"\nError when process review fr. {e}")
 
-    # Vérification des fichiers créés
+    # Check created files
     print("\n" + "=" * 80)
-    print("VÉRIFICATION DES FICHIERS CRÉÉS")
+    print("Check new kaggle cache files created")
     print("=" * 80)
     list_files_recursively(path)
 

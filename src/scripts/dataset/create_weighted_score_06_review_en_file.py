@@ -8,14 +8,15 @@ from src.process_reviews_dataset.extract_reviews_lang_from_large_dataset import 
 def create_file():
     # Download latest version
     path = kagglehub.dataset_download("kieranpoc/steam-reviews")
-    # Create filtered fr review file
+    # Create filtered review file
     config_lang = {
-        "LANG": "french",
-        "OUTPUT_LANG_REVIEW_FILE_NAME": "fr_all_reviews.csv",
-        "MIN_WEIGHTED_SCORE": 0.0,
+        "LANG": "english",
+        "OUTPUT_LANG_REVIEW_FILE_NAME": "en_weighted_score_above_06.csv",
+        "MIN_WEIGHTED_SCORE": 0.6,
     }
-    fr_all_review_file = extract_lang(path, config_lang)
-    print(f"Fichier créé: {fr_all_review_file}")
+
+    en_review_file = extract_lang(path, config_lang)
+    print(f"Created file: {en_review_file}")
 
 
 if __name__ == "__main__":

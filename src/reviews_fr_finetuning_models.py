@@ -4,7 +4,7 @@ from pdb import run
 
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from typer.cli import callback
-from src.finetune_preset_keras_models.fine_tuning_preset_keras_bert import (
+from src.finetune_preset_kerasnlp_models.fine_tuning_preset_keras_bert import (
     train_bert_base_model,
 )
 from src.utils.file_system_utils import get_outputs_path

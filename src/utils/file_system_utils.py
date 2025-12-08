@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -32,3 +33,9 @@ def get_outputs_path(subfolder: str = None) -> Path:
         return subfolder_path
 
     return outputs_path
+
+
+def list_files_recursively(directory):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            print(os.path.join(root, file))

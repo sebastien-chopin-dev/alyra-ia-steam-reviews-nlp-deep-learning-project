@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.finetune_preset_keras_models.fine_tuning_preset_keras_bert import (
+from src.finetune_preset_kerasnlp_models.fine_tuning_preset_keras_bert import (
     train_bert_base_model,
 )
 

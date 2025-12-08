@@ -14,7 +14,7 @@ import tensorflow as tf
 import keras
 from keras import layers
 
-from src.finetune_preset_keras_models.fine_tuning_preset_keras_helpers import (
+from src.finetune_preset_kerasnlp_models.fine_tuning_preset_keras_helpers import (
     MemoryCallback,
     create_train_test_eval_split,
     evaluate_model,

@@ -7,7 +7,7 @@ import os
 import time
 from datetime import timedelta
 
-from src.finetune_preset_keras_models.fine_tuning_preset_keras_helpers import (
+from src.finetune_preset_kerasnlp_models.fine_tuning_preset_keras_helpers import (
     compile_and_train_model,
     create_train_test_eval_split,
     evaluate_model,

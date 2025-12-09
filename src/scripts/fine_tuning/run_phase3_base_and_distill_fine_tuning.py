@@ -13,18 +13,18 @@ def main(run_index=-1):
     learning_rate_list = 3e-5
     layer_architecture_list = 1
     subset_size = -1  # Toute les reviews
-    callback_s = 2  # 0 - 1 - 2 - 3 (plus rapide au plus patient)
+    callback_s = 1  # 0 - 1 - 2 - 3 (plus rapide au plus patient)
 
     combinations = []
 
-    combinations.append(
-        (
-            "bert_base_en_uncased",
-            learning_rate_list,
-            layer_architecture_list,
-            callback_s,
-        )
-    )
+    # combinations.append(
+    #     (
+    #         "bert_base_en_uncased",
+    #         learning_rate_list,
+    #         layer_architecture_list,
+    #         callback_s,
+    #     )
+    # )
 
     combinations.append(
         (

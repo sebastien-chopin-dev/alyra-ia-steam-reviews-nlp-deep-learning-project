@@ -128,6 +128,8 @@ def train_bert_base_model(config: dict):
     bert_finetuned_model.save(model_path)
     print(f"Modèle sauvegardé: {model_path}")
 
+    return model_path
+
 
 def run_multiple_combinaison(
     phase_name: str,

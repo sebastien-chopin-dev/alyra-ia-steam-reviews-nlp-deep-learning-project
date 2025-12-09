@@ -189,3 +189,137 @@ def compare_evaluation_results(csv_path: str):
     print(f"\n✅ Graphique de comparaison sauvegardé: model_comparison.png")
 
     return df
+
+
+def show_stats_compare_train_evaluation(df: pd.DataFrame, best_count=6):
+    df["duration_seconds"] = pd.to_timedelta(df["duration"]).dt.total_seconds()
+
+    print("Analyse des Résultats")
+
+    print(f"Nombre de runs : {len(df)}")
+    print(f"Dataset : {df['reviews_subset'].iloc[0]:,} reviews")
+    print()
+
+    # Top Configurations
+    print(f"Top {best_count} Meilleures Configurations")
+    print("=" * 80)
+
+    top6 = df.nlargest(best_count, "test_accuracy")[
+        [
+            "learning_rate",
+            "layer_architecture",
+            "callback_strategy",
+            "test_accuracy",
+            "test_loss",
+            "macro_avg_f1_score",
+            "weighted_avg_f1_score",
+            "duration",
+        ]
+    ].copy()
+    top6.index = range(1, best_count + 1)
+    top6.columns = [
+        "LR",
+        "Arch",
+        "CB",
+        "Accuracy",
+        "Loss",
+        "Macro F1",
+        "Weighted F1",
+        "Duration",
+    ]
+
+    print(top6.to_string())
+    print()
+
+    # Statistiques Globales
+    print("Statistiques Globales")
+    print("=" * 80)
+
+    stats_df = pd.DataFrame(
+        {
+            "Métrique": ["Accuracy", "F1-Score (Macro)", "Loss"],
+            "Meilleur": [
+                f"{df['test_accuracy'].max():.4f}",
+                f"{df['macro_avg_f1_score'].max():.4f}",
+                f"{df['test_loss'].min():.4f}",
+            ],
+            "Pire": [
+                f"{df['test_accuracy'].min():.4f}",
+                f"{df['macro_avg_f1_score'].min():.4f}",
+                f"{df['test_loss'].max():.4f}",
+            ],
+            "Moyenne": [
+                f"{df['test_accuracy'].mean():.4f}",
+                f"{df['macro_avg_f1_score'].mean():.4f}",
+                f"{df['test_loss'].mean():.4f}",
+            ],
+            "Écart-type": [
+                f"{df['test_accuracy'].std():.4f}",
+                f"{df['macro_avg_f1_score'].std():.4f}",
+                f"{df['test_loss'].std():.4f}",
+            ],
+        }
+    )
+
+    print(stats_df.to_string(index=False))
+    print()
+
+    # Recommandations
+    best_run = df.loc[df["test_accuracy"].idxmax()]
+
+    recommendations = pd.DataFrame(
+        {
+            "Hyperparamètre": [
+                "Learning Rate",
+                "Architecture",
+                "Callback Strategy",
+                "Accuracy Obtenue",
+            ],
+            "Valeur Optimale": [
+                f"{best_run['learning_rate']}",
+                f"{int(best_run['layer_architecture'])}",
+                f"{int(best_run['callback_strategy'])}",
+                f"{best_run['test_accuracy']:.4f} ({best_run['test_accuracy']*100:.2f}%)",
+            ],
+        }
+    )
+
+    print(recommendations.to_string(index=False))
+    print()
+
+
+def show_plt_distribution_accuracy_result(df: pd.DataFrame):
+    # Créer un label pour chaque configuration
+    df["config"] = df.apply(
+        lambda x: f"LR:{x['learning_rate']:.0e}\nArch:{int(x['layer_architecture'])}\nCB:{int(x['callback_strategy'])}",
+        axis=1,
+    )
+
+    # Graphique
+    plt.figure(figsize=(14, 6))
+    bars = plt.bar(
+        range(len(df)), df["test_accuracy"], color="steelblue", edgecolor="black"
+    )
+
+    plt.xlabel("Configuration")
+    plt.ylabel("Test Accuracy")
+    plt.title("Test Accuracy - Toutes les Configurations")
+    plt.xticks(range(len(df)), range(1, len(df) + 1), rotation=0)
+
+    # ZOOM sur l'axe Y
+    min_acc = df["test_accuracy"].min()
+    max_acc = df["test_accuracy"].max()
+    margin = (max_acc - min_acc) * 0.1  # 10% de marge
+    plt.ylim(min_acc - margin, max_acc + margin)
+
+    plt.axhline(
+        df["test_accuracy"].mean(),
+        color="red",
+        linestyle="--",
+        linewidth=2,
+        label=f'Moyenne: {df["test_accuracy"].mean():.4f}',
+    )
+    plt.grid(axis="y", alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()

@@ -5,7 +5,7 @@
 import warnings
 import os
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from src.finetune_preset_kerasnlp_models.fine_tuning_preset_keras_helpers import (
     compile_and_train_model,
@@ -29,23 +29,23 @@ from src.utils.stats_utils import show_model_train_history
 
 warnings.filterwarnings("ignore")
 
-bert_base_model_config = {
-    "NAME_TRAIN_CONFIG": "BERT Fine-Tuned keras base",
-    "SEED": 42,
-    "REVIEWS_DATA_FILE": "reviews_en_processed.csv",
-    "SAVE_FOLDER": "bert_base_en_poc",
-    "REVIEWS_SUBSET": 20000,
-    "PREPROCESSOR_PRESET_NAME": "bert_base_en_uncased",
-    "MODEL_PRESET_NAME": "bert_tiny_en_uncased",
-    "SEQUENCE_LENGTH": 128,
-    "BATCH_SIZE": 32,
-    "EPOCHS": 10,
-    "LEARNING_RATE": 3e-5,
-    "CALLBACK_OPTION": 1,
-    "LAYER_ARCHITECTURE": 0,
-    "USE_DATASET": False,
-    "PLT_COLOR": "green",
-}
+# bert_base_model_config_example = {
+#     "NAME_TRAIN_CONFIG": "BERT Fine-Tuned keras base",
+#     "SEED": 42,
+#     "REVIEWS_DATA_FILE": "reviews_en_processed.csv",
+#     "SAVE_FOLDER": "bert_base_en_poc",
+#     "REVIEWS_SUBSET": 20000,
+#     "PREPROCESSOR_PRESET_NAME": "bert_base_en_uncased",
+#     "MODEL_PRESET_NAME": "bert_tiny_en_uncased",
+#     "SEQUENCE_LENGTH": 128,
+#     "BATCH_SIZE": 32,
+#     "EPOCHS": 10,
+#     "LEARNING_RATE": 3e-5,
+#     "CALLBACK_OPTION": 1,
+#     "LAYER_ARCHITECTURE": 0,
+#     "USE_TF_DATASET": False,
+#     "PLT_COLOR": "green",
+# }
 
 
 def train_bert_base_model(config: dict):
@@ -127,3 +127,95 @@ def train_bert_base_model(config: dict):
     model_path = f"{config['SAVE_FOLDER']}/finetuned_model.keras"
     bert_finetuned_model.save(model_path)
     print(f"Modèle sauvegardé: {model_path}")
+
+
+def run_multiple_combinaison(
+    phase_name: str,
+    combinations,
+    base_config=None,
+    run_index=-1,
+    subset_size=-1,
+):
+
+    if base_config is not None:
+        bert_base_model_config = base_config
+    else:
+        bert_base_model_config = {
+            "NAME_TRAIN_CONFIG": "Hyperparameter Search",
+            "PHASE_NAME": phase_name,
+            "SEED": 42,
+            "REVIEWS_DATA_FILE": "reviews_en_processed.csv",
+            "SAVE_FOLDER": "hyperparam_search",
+            "REVIEWS_SUBSET": subset_size,
+            "BATCH_SIZE": 32,
+            "EPOCHS": 10,  # pour être sur car early stopping
+            "SEQUENCE_LENGTH": 128,
+            "USE_TF_DATASET": False,
+            "PLT_COLOR": "green",
+        }
+
+    print("\nPlan d'entraînement:")
+    for i, (variant, lr, arch, callback_s) in enumerate(combinations, 1):
+
+        if run_index != -1 and i < run_index:
+            continue
+
+        print(
+            f"   {i:2d}. {variant:25s} | LR: {lr:.0e} | Arch: {arch} | Callback: {callback_s}"
+        )
+
+    for i, (variant, lr, arch, callback_s) in enumerate(combinations, 1):
+
+        if run_index != -1 and i < run_index:
+            continue
+
+        print(f"\n{'='*80}")
+        print(f"Entraînement {i}/{len(combinations)}")
+        print(f"   Variant: {variant}")
+        print(f"   Learning Rate: {lr}")
+        print(f"   Architecture: {arch}")
+        print(f"   Callback strategy: {callback_s}")
+        print(f"{'='*80}")
+
+        # Créer la config pour ce run
+        config = bert_base_model_config.copy()
+        config.update(
+            {
+                "NAME_TRAIN_CONFIG": f"{variant}-arch{arch}-lr{lr:.0e}-call{callback_s}-on-en-{subset_size}",
+                "SAVE_FOLDER": f"{variant}_arch{arch}_lr{lr:.0e}_call{callback_s}_on_en_{subset_size}",
+                "MODEL_PRESET_NAME": variant,
+                "PREPROCESSOR_PRESET_NAME": variant,
+                "LEARNING_RATE": lr,
+                "LAYER_ARCHITECTURE": arch,
+                "CALLBACK_OPTION": callback_s,
+            }
+        )
+
+        try:
+            # Entraîner le modèle
+            start_time = datetime.now()
+
+            train_bert_base_model(config)
+
+            end_time = datetime.now()
+            duration = (end_time - start_time).total_seconds()
+
+            # Stocker les résultats
+            result = {
+                "run_number": i,
+                "variant": variant,
+                "learning_rate": lr,
+                "architecture": arch,
+                "training_duration": duration,
+                "status": "success",
+            }
+
+            print(f"\nRun {i} terminé - {result}")
+
+        except Exception as e:
+            print(f"\nErreur durant le run {i}: {e} - confg {config}")
+
+        # Afficher progression
+        print(
+            f"\nProgression: {i}/{len(combinations)} ({i/len(combinations)*100:.1f}%)"
+        )

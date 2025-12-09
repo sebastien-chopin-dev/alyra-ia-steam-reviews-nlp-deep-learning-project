@@ -1,99 +1,8 @@
 from datetime import datetime
 from src.finetune_preset_kerasnlp_models.fine_tuning_preset_keras_bert import (
+    run_multiple_combinaison,
     train_bert_base_model,
 )
-
-
-def run_multiple_combinaison(
-    phase_name: str,
-    combinations,
-    base_config=None,
-    run_index=-1,
-    subset_size=-1,
-):
-
-    if base_config is not None:
-        bert_base_model_config = base_config
-    else:
-        bert_base_model_config = {
-            "NAME_TRAIN_CONFIG": "Hyperparameter Search",
-            "PHASE_NAME": phase_name,
-            "SEED": 42,
-            "REVIEWS_DATA_FILE": "reviews_en_processed.csv",
-            "SAVE_FOLDER": "hyperparam_search",
-            "REVIEWS_SUBSET": subset_size,
-            "BATCH_SIZE": 32,
-            "EPOCHS": 15,  # pour être sur car early stopping
-            "SEQUENCE_LENGTH": 128,
-            "USE_DATASET": False,
-            "PLT_COLOR": "green",
-        }
-
-    print("\nPlan d'entraînement:")
-    for i, (variant, lr, arch, callback_s) in enumerate(combinations, 1):
-
-        if run_index != -1 and i < run_index:
-            continue
-
-        print(
-            f"   {i:2d}. {variant:25s} | LR: {lr:.0e} | Arch: {arch} | Callback: {callback_s}"
-        )
-
-    for i, (variant, lr, arch, callback_s) in enumerate(combinations, 1):
-
-        if run_index != -1 and i < run_index:
-            continue
-
-        print(f"\n{'='*80}")
-        print(f"Entraînement {i}/{len(combinations)}")
-        print(f"   Variant: {variant}")
-        print(f"   Learning Rate: {lr}")
-        print(f"   Architecture: {arch}")
-        print(f"   Callback strategy: {callback_s}")
-        print(f"{'='*80}")
-
-        # Créer la config pour ce run
-        config = bert_base_model_config.copy()
-        config.update(
-            {
-                "NAME_TRAIN_CONFIG": f"BERT-{variant.split('_')[1]}-arch{arch}-lr{lr:.0e}",
-                "SAVE_FOLDER": f"{variant}_arch{arch}_lr{lr:.0e}call{callback_s}_on_en_{subset_size}",
-                "MODEL_PRESET_NAME": variant,
-                "PREPROCESSOR_PRESET_NAME": variant,
-                "LEARNING_RATE": lr,
-                "LAYER_ARCHITECTURE": arch,
-                "CALLBACK_OPTION": callback_s,
-            }
-        )
-
-        try:
-            # Entraîner le modèle
-            start_time = datetime.now()
-
-            train_bert_base_model(config)
-
-            end_time = datetime.now()
-            duration = (end_time - start_time).total_seconds()
-
-            # Stocker les résultats
-            result = {
-                "run_number": i,
-                "variant": variant,
-                "learning_rate": lr,
-                "architecture": arch,
-                "training_duration": duration,
-                "status": "success",
-            }
-
-            print(f"\nRun {i} terminé - {result}")
-
-        except Exception as e:
-            print(f"\nErreur durant le run {i}: {e} - confg {config}")
-
-        # Afficher progression
-        print(
-            f"\nProgression: {i}/{len(combinations)} ({i/len(combinations)*100:.1f}%)"
-        )
 
 
 def run_quick_test_to_find_best_hyperparameters(run_index=-1):
@@ -232,7 +141,7 @@ def run_test_to_find_best_hyperparameters_final(run_index=-1):
         "BATCH_SIZE": 16,
         "EPOCHS": 10,  # pour être sur car early stopping
         "SEQUENCE_LENGTH": 128,
-        "USE_DATASET": True,
+        "USE_TF_DATASET": True,
         "PLT_COLOR": "green",
     }
 

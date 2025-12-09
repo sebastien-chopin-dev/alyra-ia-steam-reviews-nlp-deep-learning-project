@@ -49,7 +49,7 @@ bert_base_model_config = {
     "LEARNING_RATE": 3e-5,
     "CALLBACK_OPTION": 1,
     "LAYER_ARCHITECTURE": 0,
-    "USE_DATASET": False,
+    "USE_TF_DATASET": False,
     "PLT_COLOR": "green",
 }
 

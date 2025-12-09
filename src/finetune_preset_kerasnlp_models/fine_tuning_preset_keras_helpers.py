@@ -415,7 +415,7 @@ def compile_and_train_model(
     print("\nDébut de l'entraînement...")
     print("=" * 80)
 
-    if config["USE_DATASET"] is True:
+    if config["USE_TF_DATASET"] is True:
         train_dataset = create_tf_dataset(X_train_bert, y_train, config)
         val_dataset = create_tf_dataset(X_val_bert, y_val, config)
 

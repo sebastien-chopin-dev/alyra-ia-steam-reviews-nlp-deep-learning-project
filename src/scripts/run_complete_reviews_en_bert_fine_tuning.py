@@ -1,6 +1,7 @@
 from datetime import datetime
 import kagglehub
-import pandas as pd
+
+# import pandas as pd
 
 from src.finetune_preset_kerasnlp_models.fine_tuning_preset_keras_bert import (
     train_bert_base_model,
@@ -11,8 +12,9 @@ from src.process_reviews_dataset.extract_reviews_lang_from_large_dataset import 
 from src.process_reviews_dataset.process_reviews_en_fr import (
     process_reviews,
 )
-from src.utils.file_system_utils import get_outputs_path, list_files_recursively
-from src.utils.stats_utils import show_stats_compare_train_evaluation
+from src.utils.file_system_utils import list_files_recursively
+
+# from src.utils.stats_utils import show_stats_compare_train_evaluation
 
 # config_extract_en = {
 #     "LANG": "english",

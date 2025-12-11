@@ -10,11 +10,11 @@ import keras
 app = FastAPI()
 
 # Charger le modèle
-model = keras.models.load_model("outputs/models/prod/bert_base_model.keras")
+model = keras.models.load_model("outputs/models/prod/bert_base_en_model.keras")
 
 # Recréer le preprocessor (même config que l'entraînement)
 preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
-    "bert_small_en_uncased", sequence_length=128
+    "bert_base_en_uncased", sequence_length=128
 )
 
 

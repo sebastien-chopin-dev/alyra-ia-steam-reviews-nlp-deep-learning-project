@@ -1,6 +1,7 @@
 # Custom
 Simple_deep_learning_intro/data/
 outputs/reports
+outputs/models
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

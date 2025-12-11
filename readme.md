@@ -16,7 +16,7 @@ python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'
 
 ### Dépendances développement
 
-pip install keras tensorflow matplotlib jupyter pandas numpy scipy scikit-learn scikeras[tensorflow] optuna GPUtil seaborn gymnasium keras-nlp datasets kagglehub[pandas-datasets] kaggle
+pip install keras tensorflow matplotlib jupyter pandas numpy scipy scikit-learn scikeras[tensorflow] optuna GPUtil seaborn gymnasium keras-nlp datasets kagglehub[pandas-datasets] vaderSentiment
 
 ### Kaggle authentication
 

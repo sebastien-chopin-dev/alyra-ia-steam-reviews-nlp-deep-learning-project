@@ -185,8 +185,6 @@ def compare_evaluation_results(csv_path: str):
     plt.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig("model_comparison.png", dpi=300, bbox_inches="tight")
-    print(f"\n✅ Graphique de comparaison sauvegardé: model_comparison.png")
 
     return df
 

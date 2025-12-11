@@ -437,6 +437,8 @@ def compile_and_train_model(
             verbose=1,
         )
 
+        # steps_per_epoch=100
+
     print("\nEntraînement terminé!")
 
     return history_bert_finetuned

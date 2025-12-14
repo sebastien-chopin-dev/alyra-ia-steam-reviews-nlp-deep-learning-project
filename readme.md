@@ -1,4 +1,4 @@
-# Projet IA - Prédiction sur les marketplaces des consoles digitales
+# Projet IA - Sentiment analysis NLP - Deep learning - Reviews Steam
 
 ## Alyra Bloc 05 - Deep learning
 

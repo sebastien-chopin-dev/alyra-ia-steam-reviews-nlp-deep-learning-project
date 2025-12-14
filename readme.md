@@ -1,6 +1,20 @@
-# Projet 
+# Projet IA - Prédiction sur les marketplaces des consoles digitales
 
-Semaine 6 deep learning tensorflow
+## Alyra Bloc 05 - Deep learning
+
+Ce projet consiste a utiliser un algorithme de deep learning pour classifier automatiquement le sentiment des commentaires de joueurs. Binaire (positif ou négatif).
+
+## Positionnement du projet
+
+- Fine-tuning spécifique sur les reviews de jeux vidéo Steam
+- Spécialisation sur le langage et les expressions propres à la communauté du gaming
+- Utilisation de modèles BERT via keras NLP Tensorflow (Tiny, small, DistilBERT)
+
+## Dataset 
+
+Steam Reviews Dataset (Kaggle, 100 millions reviews) :
+
+https://www.kaggle.com/datasets/kieranpoc/steam-reviews/data
 
 ## Installation des dépendances
 
@@ -24,7 +38,25 @@ https://www.kaggle.com/docs/api#authentication
 
 token at ~/.kaggle/kaggle.json
 
-### API Docker build
+## Structure du projet
+
+### Notebooks
+
+#### 1_reviews_dataset_exploration.ipynb
+#### 2_create_fine_tuning_reviews_dataset_en_fr.ipynb
+#### 3_fine_tuning_reviews_en_preset_keras_nlp_bert.ipynb
+#### 4_fine_tuning_phases_strategy.ipynb
+#### 5_deployment_api_docker copy.ipynb
+
+### Scripts python
+
+Fichiers python disponible dans src/scripts
+
+#### dataset
+#### fine_tuning
+#### run_complete
+
+### Déploiement API Docker build
 
 cd api
 docker-compose up --build
@@ -38,26 +70,6 @@ python -m src.reviews_en_finetuning_models
 ### TensorBoard
 
 tensorboard --logdir=outputs/reports/bert_base_en_test/logs
-
-### Stratégies d'entrainement
-
-Phase 1 :  Tests rapide pour trouver les meilleures hyper paramétres:
-- Sur un subset des reviews limité (50 000 au lieu de 200 000) test de plusieurs configurations 
-de learning rate et de plusieurs architectures de couches de sortie finetuning. (12 configurations)
-- Utilisation d'un modèle bert plus léger 
-- "bert_small_en_uncased" 29 M de paramétres.
-(Environ 2 minutes par entrainement avec RTX 4070)
-
-Phase 2: Prendre les 3 meilleures combinaisons d'hyper paramétres et tests sur modèles standard
-Subset plus large (100000 reviews)
-- "distil_bert_base_en_uncased" 66M de params
-- "bert_base_en_uncased" 110M de params
-
-Phase 3: Prendre la meilleure combinaison d'hyper paramétre et tests sur modèles plus performant:
-Subset complet (200000 reviews)
-- "bert_base_en_uncased" 110M de params
-- "roberta_base_en" 125M de params
-- "deberta_v3_small_en" 86M
 
 
 

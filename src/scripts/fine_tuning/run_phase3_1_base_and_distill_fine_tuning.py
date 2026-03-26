@@ -13,17 +13,17 @@ def main(run_index=-1):
     learning_rate_list = 3e-5
     layer_architecture_list = 1
     subset_size = -1  # Toute les reviews
-    callback_s = 2  # 0 - 1 - 2 - 3 (plus rapide au plus patient)
+    callback_s = 1  # 0 - 1 - 2 - 3 (plus rapide au plus patient)
 
     finetune_model_config = {
         "NAME_TRAIN_CONFIG": "Hyperparameter Search phase 1",
-        "PHASE_NAME": "en_phase3",
+        "PHASE_NAME": "en_phase3.1",
         "SEED": 42,
         "REVIEWS_DATA_FILE": "reviews_en_processed.csv",
         "REVIEWS_SUBSET": subset_size,
         "BATCH_SIZE": 32,
         "EPOCHS": 10,  # pour être sur car early stopping
-        "SEQUENCE_LENGTH": 128,
+        "SEQUENCE_LENGTH": 512,
         "USE_TF_DATASET": False,  # opti batch memory
         "PLT_COLOR": "green",
     }
@@ -49,7 +49,7 @@ def main(run_index=-1):
     )
 
     run_multiple_combinaison(
-        "en_phase3",
+        "en_phase3.1",
         combinations,
         base_config=finetune_model_config,
         run_index=run_index,

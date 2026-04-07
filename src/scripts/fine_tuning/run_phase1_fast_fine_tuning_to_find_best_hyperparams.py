@@ -11,7 +11,7 @@ def main(run_index=-1):
     learning_rate_list = [2e-5, 3e-5, 5e-5]
     layer_architecture_list = [0, 1, 2]
     subset_size = 50000
-    callback_s_list = [0, 1, 2]  # 0 - 1 - 2 (plus rapide au plus patient)
+    callback_s_list = [0, 1, 2]  # 0 - 1 - 2 (fastest to most patient)
 
     finetune_model_config = {
         "NAME_TRAIN_CONFIG": "Hyperparameter Search phase 1",
@@ -20,7 +20,7 @@ def main(run_index=-1):
         "REVIEWS_DATA_FILE": "reviews_en_processed.csv",
         "REVIEWS_SUBSET": subset_size,
         "BATCH_SIZE": 32,
-        "EPOCHS": 10,  # pour être sur car early stopping
+        "EPOCHS": 10,  # high value, early stopping will trigger
         "SEQUENCE_LENGTH": 128,
         "USE_TF_DATASET": False,  # opti batch memory
         "PLT_COLOR": "green",
@@ -58,8 +58,8 @@ if __name__ == "__main__":
 #    Accuracy: 87.76% | Val Accuracy: 87.76% | Loss: 0.3065
 #    Config: Architecture 0 + Learning Rate 5e-05 + Callback Option 0
 
-# Observations :
-# Learning Rate 5e-05 domine (5 fois dans le top 6)
-# Architecture 0 (la plus simple) est très compétitive
-# Architecture 1 donne le meilleur pic de performance
-# Architectures 2 & 3 (plus complexes) n'apportent pas de gain
+# Observations:
+# Learning Rate 5e-05 dominates (5 times in top 6)
+# Architecture 0 (simplest) is very competitive
+# Architecture 1 yields the best peak performance
+# Architectures 2 & 3 (more complex) bring no improvement

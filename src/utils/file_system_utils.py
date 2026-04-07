@@ -5,9 +5,9 @@ from pathlib import Path
 def get_project_root() -> Path:
     current_file = Path(__file__).resolve()
 
-    # Chercher la racine du projet en remontant
+    # Search for project root by traversing upward
     for parent in current_file.parents:
-        # Vérifier la présence de fichiers marqueurs
+        # Check for marker files
         if (
             (parent / ".git").exists()
             or (parent / "setup.py").exists()
@@ -16,7 +16,7 @@ def get_project_root() -> Path:
         ):
             return parent
 
-    # Si aucun marqueur trouvé, retourner 2 niveaux au-dessus
+    # If no marker found, return 2 levels up
     return current_file.parents[1]
 
 
@@ -24,7 +24,7 @@ def get_outputs_path(subfolder: str = None) -> Path:
     project_root = get_project_root()
     outputs_path = project_root / "outputs"
 
-    # Créer le dossier s'il n'existe pas
+    # Create folder if it doesn't exist
     outputs_path.mkdir(parents=True, exist_ok=True)
 
     if subfolder:

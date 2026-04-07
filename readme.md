@@ -1,6 +1,6 @@
 # Steam Reviews Sentiment Analysis — NLP Deep Learning
 
-**Alyra Bloc 05 — Deep Learning**
+**Alyra Project — Deep Learning**
 
 Binary sentiment classification (positive / negative) of Steam game reviews using domain-specific BERT fine-tuning with Keras NLP and TensorFlow.
 

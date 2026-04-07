@@ -15,14 +15,14 @@ from src.utils.file_system_utils import list_files_recursively
 # }
 
 # process_reviews_config_example = {
-#     "PLAY_TIME_FOREVER": 30,  # minutes passées sur le jeux avant d'écrire la review
-#     "MIN_WORD_COUNT": 10,  # compromis pour ne pas perdre le signal du sentiment si trop court
-#     "MAX_WORD_COUNT": 400,  # essayer de garder des reviews completes non tronqués (contrainte taille max tokenizer)
-#     "WEIGHTED_VOTE_SCORE": 0.5,  # on filtre les reviews avec un score de qualité donné par steam (minimiser celles écritent par des bots)
-#     "STEAM_PURCHASE": True,  # Joueur légitime achat vérifié
-#     "RECEIVED_FOR_FREE": False,  # Pas reçu gratuitement (ça biaise le vote)
-#     "CLEAN_HTML_TAGS": True,  # On nettois la reviews des tags html (valeur faible pour le signal de sentiment)
-#     "REMOVE_ASCCI_ART_REVIEWS": True,  # On supprime les reviews composé essentiellement d'ascii art
+#     "PLAY_TIME_FOREVER": 30,  # minutes of playtime before writing the review
+#     "MIN_WORD_COUNT": 10,  # trade-off to keep sentiment signal (too short = unreliable)
+#     "MAX_WORD_COUNT": 400,  # keep complete reviews, avoid truncation (tokenizer max size constraint)
+#     "WEIGHTED_VOTE_SCORE": 0.5,  # filter by Steam quality score (minimize bot-written reviews)
+#     "STEAM_PURCHASE": True,  # legitimate player with verified purchase
+#     "RECEIVED_FOR_FREE": False,  # not received for free (biases the vote)
+#     "CLEAN_HTML_TAGS": True,  # strip HTML tags from reviews (low sentiment signal value)
+#     "REMOVE_ASCCI_ART_REVIEWS": True,  # remove reviews composed mostly of ASCII art
 # }
 
 
@@ -64,7 +64,7 @@ def main():
         "PROCESS_NAME": "Create filtered preprocessed english reviews file",
         "INPUT_FILE_NAME": "en_weighted_score_above_06.csv",
         "EXPORT_FILE_NAME": "reviews_en_processed.csv",
-        "PLAY_TIME_FOREVER": 30,  # minutes passées sur le jeu avant d'écrire la review
+        "PLAY_TIME_FOREVER": 30,  # minutes of playtime before writing the review
         "MIN_WORD_COUNT": 10,
         "MAX_WORD_COUNT": 400,
         "WEIGHTED_VOTE_SCORE": 0.5,

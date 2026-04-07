@@ -9,10 +9,10 @@ import keras
 
 app = FastAPI()
 
-# Charger le modèle
+# Load the model
 model = keras.models.load_model("outputs/models/prod/bert_base_en_model.keras")
 
-# Recréer le preprocessor (même config que l'entraînement)
+# Recreate the preprocessor (same config as training)
 preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     "bert_base_en_uncased", sequence_length=128
 )
@@ -24,7 +24,7 @@ class Review(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"Message": "Bienvenue Steam reviews FastAPI"}
+    return {"Message": "Welcome to Steam Reviews FastAPI"}
 
 
 @app.get("/hello")
@@ -40,8 +40,8 @@ def predict_sentiment(review: Review):
     # (sigmoid output)
     prob = model.predict(processed, verbose=0).flatten()[0]
 
-    # Calcul sentiment et confiance
-    sentiment = "POSITIF" if prob > 0.5 else "NÉGATIF"
+    # Compute sentiment and confidence
+    sentiment = "POSITIVE" if prob > 0.5 else "NEGATIVE"
     confidence = prob if prob > 0.5 else 1 - prob
 
     return {
@@ -56,4 +56,4 @@ def predict_sentiment(review: Review):
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
-    return JSONResponse(status_code=404, content={"message": "Pas trouvé"})
+    return JSONResponse(status_code=404, content={"message": "Not found"})

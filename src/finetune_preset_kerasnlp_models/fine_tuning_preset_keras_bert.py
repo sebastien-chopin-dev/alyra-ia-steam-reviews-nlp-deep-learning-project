@@ -1,6 +1,6 @@
-# Transfer Learning et Fine-Tuning avec BERT : Classification de Sentiments
-# Utilise les fichiers Steam review anglais pour la classification de sentiments (positif/négatif).
-# Backend: TensorFlow avec API KerasNLP
+# Transfer Learning and Fine-Tuning with BERT: Sentiment Classification
+# Uses English Steam review files for binary sentiment classification (positive/negative).
+# Backend: TensorFlow with KerasNLP API
 
 import warnings
 import os
@@ -62,15 +62,15 @@ def train_bert_base_model(config: dict):
 
     start_time = time.time()
 
-    init_gpu_for_tf()  # Utilisation de la GPU pour TensorFlow (si disponible)
-    init_graph_plt()  # Initialisation de matplotlib (pour graphiques)
-    init_seed(config["SEED"])  # Initialisation seed reproductibilité
+    init_gpu_for_tf()  # Use GPU for TensorFlow (if available)
+    init_graph_plt()  # Initialize matplotlib for plots
+    init_seed(config["SEED"])  # Initialize seed for reproducibility
     show_tf_keras_version_engine()
 
     config["SAVE_FOLDER"] = get_outputs_path(f'reports/{config["SAVE_FOLDER"]}')
-    print(f"Création dossier reports: {config["SAVE_FOLDER"]}")
+    print(f"Creating reports folder: {config["SAVE_FOLDER"]}")
 
-    df_reviews = load_and_verif_reviews_datas(config)  # Chargmenet des données
+    df_reviews = load_and_verif_reviews_datas(config)  # Load data
 
     X_train, y_train, X_val, y_val, X_test, y_test = create_train_test_eval_split(
         df_reviews, config
@@ -83,7 +83,7 @@ def train_bert_base_model(config: dict):
     # bert_small_en_uncased
     bert_finetuned_model = instantiate_keras_preset_model_finetuned(config)
 
-    print("\nArchitecture du modèle:")
+    print("\nModel architecture:")
     bert_finetuned_model.summary()
 
     history_bert_finetuned = compile_and_train_model(
@@ -99,7 +99,7 @@ def train_bert_base_model(config: dict):
     if not os.path.exists(config["SAVE_FOLDER"]):
         os.makedirs(config["SAVE_FOLDER"])
 
-    # Visualisation des courbes d'apprentissage
+    # Plot learning curves
     models_histories = [
         (config["NAME_TRAIN_CONFIG"], history_bert_finetuned, config["PLT_COLOR"])
     ]
@@ -108,25 +108,25 @@ def train_bert_base_model(config: dict):
         models_histories, f"{config['SAVE_FOLDER']}/train_history.png"
     )
 
-    # Evaluation finale
+    # Final evaluation
     test_loss, test_accuracy, report_dict, cm = evaluate_model(
         bert_finetuned_model, X_test_bert, y_test, config
     )
 
-    # Calculer la durée
+    # Compute training duration
     training_duration = time.time() - start_time
     duration_str = str(timedelta(seconds=int(training_duration)))
 
-    print(f"\nDurée d'entraînement: {duration_str}")
+    print(f"\nTraining duration: {duration_str}")
 
-    # Sauvegarde des résultats pour comparaison ultérieur
+    # Save results for later comparison
     save_model_spec_and_eval(
         config, test_loss, test_accuracy, report_dict, cm, duration_str
     )
 
     model_path = f"{config['SAVE_FOLDER']}/finetuned_model.keras"
     bert_finetuned_model.save(model_path)
-    print(f"Modèle sauvegardé: {model_path}")
+    print(f"Model saved: {model_path}")
 
     return model_path
 
@@ -150,13 +150,13 @@ def run_multiple_combinaison(
             "SAVE_FOLDER": "hyperparam_search",
             "REVIEWS_SUBSET": subset_size,
             "BATCH_SIZE": 32,
-            "EPOCHS": 10,  # pour être sur car early stopping
+            "EPOCHS": 10,  # high value, early stopping will trigger
             "SEQUENCE_LENGTH": 128,
             "USE_TF_DATASET": False,
             "PLT_COLOR": "green",
         }
 
-    print("\nPlan d'entraînement:")
+    print("\nTraining plan:")
     for i, (variant, lr, arch, callback_s) in enumerate(combinations, 1):
 
         if run_index != -1 and i < run_index:
@@ -172,14 +172,14 @@ def run_multiple_combinaison(
             continue
 
         print(f"\n{'='*80}")
-        print(f"Entraînement {i}/{len(combinations)}")
+        print(f"Training {i}/{len(combinations)}")
         print(f"   Variant: {variant}")
         print(f"   Learning Rate: {lr}")
         print(f"   Architecture: {arch}")
         print(f"   Callback strategy: {callback_s}")
         print(f"{'='*80}")
 
-        # Créer la config pour ce run
+        # Create config for this run
         config = bert_base_model_config.copy()
         config.update(
             {
@@ -194,7 +194,7 @@ def run_multiple_combinaison(
         )
 
         try:
-            # Entraîner le modèle
+            # Train the model
             start_time = datetime.now()
 
             train_bert_base_model(config)
@@ -202,7 +202,7 @@ def run_multiple_combinaison(
             end_time = datetime.now()
             duration = (end_time - start_time).total_seconds()
 
-            # Stocker les résultats
+            # Store results
             result = {
                 "run_number": i,
                 "variant": variant,
@@ -212,12 +212,12 @@ def run_multiple_combinaison(
                 "status": "success",
             }
 
-            print(f"\nRun {i} terminé - {result}")
+            print(f"\nRun {i} done - {result}")
 
         except Exception as e:
-            print(f"\nErreur durant le run {i}: {e} - confg {config}")
+            print(f"\nError during run {i}: {e} - config {config}")
 
-        # Afficher progression
+        # Show progress
         print(
-            f"\nProgression: {i}/{len(combinations)} ({i/len(combinations)*100:.1f}%)"
+            f"\nProgress: {i}/{len(combinations)} ({i/len(combinations)*100:.1f}%)"
         )

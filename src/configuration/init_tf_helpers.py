@@ -12,15 +12,15 @@ def init_gpu_for_tf():
         if gpus:
             for gpu in gpus:
                 tf.config.experimental.set_memory_growth(gpu, True)
-            print(f"GPU(s) détecté(s): {len(gpus)} - Croissance mémoire activée")
+            print(f"GPU(s) detected: {len(gpus)} - Memory growth enabled")
         else:
-            print("⚠️  Aucun GPU détecté - Utilisation du CPU")
+            print("⚠️  No GPU detected - Using CPU")
     except Exception as e:
         print(f"Configuration GPU: {e}")
 
 
 def init_graph_plt():
-    # Configuration graphiques
+    # Plot configuration
     plt.style.use("seaborn-v0_8-darkgrid")
     sns.set_palette("husl")
 

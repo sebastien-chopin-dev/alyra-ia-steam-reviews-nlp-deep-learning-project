@@ -25,10 +25,10 @@ def print_memory_usage():
     process = psutil.Process(os.getpid())
     mem_info = process.memory_info()
 
-    print("\nUtilisation mémoire:")
-    print(f"   RAM utilisée: {mem_info.rss / 1024**3:.2f} GB")
-    print(f"   RAM disponible: {psutil.virtual_memory().available / 1024**3:.2f} GB")
-    print(f"   RAM totale: {psutil.virtual_memory().total / 1024**3:.2f} GB")
+    print("\nMemory usage:")
+    print(f"   RAM used: {mem_info.rss / 1024**3:.2f} GB")
+    print(f"   RAM available: {psutil.virtual_memory().available / 1024**3:.2f} GB")
+    print(f"   RAM total: {psutil.virtual_memory().total / 1024**3:.2f} GB")
 
 
 class MemoryCallback(keras.callbacks.Callback):
@@ -84,17 +84,17 @@ def get_preprocessor_and_backbone(config):
         )
 
     else:
-        raise ValueError(f"Preset '{preset_name}' non supporté")
+        raise ValueError(f"Preset '{preset_name}' not supported")
 
     return preprocessor, backbone, use_sequence_output
 
 
 def create_tf_dataset(X_preprocessed, y, config):
-    # Evite de charger tout en mémoire pour les gros modèles
+    # Avoid loading everything into memory for large models
     preset_name = config["PREPROCESSOR_PRESET_NAME"]
     preset_lower = preset_name.lower()
 
-    # DistilBERT - deberta - PAS de segment_ids
+    # DistilBERT - deberta - NO segment_ids
     if "distil" in preset_lower or "deberta_v3" in preset_lower:
         dataset = tf.data.Dataset.from_tensor_slices(
             (
@@ -153,7 +153,7 @@ def create_model_inputs(config):
     preset_name = config["PREPROCESSOR_PRESET_NAME"]
     preset_lower = preset_name.lower()
 
-    # DistilBERT - deberta - PAS de segment_ids
+    # DistilBERT - deberta - NO segment_ids
     if "distil" in preset_lower or "deberta_v3" in preset_lower:
         inputs = {
             "token_ids": layers.Input(
@@ -202,20 +202,20 @@ def create_model_inputs(config):
 
 
 def load_and_verif_reviews_datas(config: dict):
-    # Récupération du chemin du dataset Kaggle
+    # Retrieve Kaggle dataset path
     kaggle_cache_path = kagglehub.dataset_download("kieranpoc/steam-reviews")
     print("Path to dataset files:", kaggle_cache_path)
 
-    # Chargement des données
+    # Load data
     reviews_file_path = f"{kaggle_cache_path}/{config["REVIEWS_DATA_FILE"]}"
     df_reviews = pd.read_csv(reviews_file_path)
 
-    print(f"\nDataset chargé: {len(df_reviews)} reviews")
-    column_summary(df_reviews)  # Résumé des colonnes
+    print(f"\nDataset loaded: {len(df_reviews)} reviews")
+    column_summary(df_reviews)  # Column summary
 
-    # Affichage d'un échantillon
+    # Display a sample
     print("\n" + "=" * 80)
-    print("Aperçu des données:")
+    print("Data preview:")
     print("=" * 80)
     print(df_reviews.head())
 
@@ -230,21 +230,21 @@ def create_train_test_eval_split(df: pd.DataFrame, config: dict):
 
     config["REVIEWS_SUBSET"] = len(df_reviews_sample)
 
-    # Extraction des features et labels
+    # Extract features and labels
     X = df_reviews_sample["review"].values
     y = df_reviews_sample["voted_up"].values
 
-    # Split train/temp (80/20)
+    # Train/temp split (80/20)
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=0.2, random_state=config["SEED"], stratify=y
     )
 
-    # Split temp en val/test (50/50 du 20% restant = 10% chacun)
+    # Split temp into val/test (50/50 of remaining 20% = 10% each)
     X_val, X_test, y_val, y_test = train_test_split(
         X_temp, y_temp, test_size=0.5, random_state=config["SEED"], stratify=y_temp
     )
 
-    print("\n Données split:")
+    print("\n Data split:")
     print(f"   - Train: {len(X_train)} samples ({len(X_train)/len(X)*100:.1f}%)")
     print(f"   - Val:   {len(X_val)} samples ({len(X_val)/len(X)*100:.1f}%)")
     print(f"   - Test:  {len(X_test)} samples ({len(X_test)/len(X)*100:.1f}%)")
@@ -253,35 +253,35 @@ def create_train_test_eval_split(df: pd.DataFrame, config: dict):
 
 
 def keras_preset_preprocess_data(X_train, X_val, X_test, config: dict):
-    print("\nInitialisation du preprocessor BERT...")
+    print("\nInitializing BERT preprocessor...")
     preprocessor, backbone, use_sequence_output = get_preprocessor_and_backbone(config)
-    print("Preprocessor chargé")
+    print("Preprocessor loaded")
 
-    print("\nPreprocessing des données avec BERT...")
+    print("\nPreprocessing data with BERT...")
     X_train_bert = preprocessor(X_train)
     X_val_bert = preprocessor(X_val)
     X_test_bert = preprocessor(X_test)
-    print("Preprocessing terminé")
+    print("Preprocessing done")
 
     return X_train_bert, X_val_bert, X_test_bert
 
 
 def instantiate_keras_preset_model_finetuned(config: dict):
-    # Paramètres
+    # Parameters
     preset_name = config["MODEL_PRESET_NAME"]
     architecture_layer = config["LAYER_ARCHITECTURE"]
 
-    print(f"\n Construction du modèle Preset Keras {preset_name}...")
+    print(f"\n Building Keras Preset model {preset_name}...")
 
-    # BERT backbone - TOUS LES POIDS ENTRAÎNABLES
+    # BERT backbone - ALL WEIGHTS TRAINABLE
     preprocessor, bert_backbone, use_sequence_output = get_preprocessor_and_backbone(
         config
     )
 
-    # Inputs (données déjà preprocessée en amont)
+    # Inputs (data already preprocessed upstream)
     inputs = create_model_inputs(config)
 
-    # Construction du modèle avec preprocess intégré mais à chaque epochs
+    # Build model with integrated preprocess at each epoch
     # inputs = keras.Input(shape=(), dtype="string", name="text_input")
     # x = preprocessor(inputs)
 
@@ -295,15 +295,15 @@ def instantiate_keras_preset_model_finetuned(config: dict):
 
     if (
         architecture_layer == 1
-    ):  # Architecture vu pendant la formation avec petit dataset de démo
+    ):  # Architecture from training with small demo dataset
         x = layers.Dropout(0.3)(cls_token)
         x = layers.Dense(64, activation="relu")(x)
         x = layers.Dropout(0.3)(x)
-    elif architecture_layer == 2:  # Architecture plus équilibré
+    elif architecture_layer == 2:  # More balanced architecture
         x = layers.Dropout(0.2)(cls_token)
         x = layers.Dense(128, activation="relu")(x)
         x = layers.Dropout(0.2)(x)
-    elif architecture_layer == 3:  # Architecture plus complexe
+    elif architecture_layer == 3:  # More complex architecture
         x = layers.Dropout(0.3)(cls_token)
         x = layers.Dense(256, activation="relu")(x)
         x = layers.Dropout(0.3)(x)
@@ -312,11 +312,11 @@ def instantiate_keras_preset_model_finetuned(config: dict):
     else:
         x = layers.Dropout(0.1)(cls_token)
 
-    # Nombre de couche Version auto avec optuna
+    # Automatic layer count with optuna
     # study = optuna.create_study(direction="maximize")
     # study.optimize(objective, n_trials=100)
 
-    # Dernière couche commune pour la classification
+    # Final shared classification layer
     output = layers.Dense(1, activation="sigmoid", name="classifier")(x)
     model = keras.Model(inputs, output)
 
@@ -325,7 +325,7 @@ def instantiate_keras_preset_model_finetuned(config: dict):
 
 def get_callback_from_config(config):
     if config["CALLBACK_OPTION"] == 0:
-        # Pour tests rapides agressif
+        # For aggressive quick tests
         callback_es = EarlyStopping(
             monitor="val_loss", patience=2, restore_best_weights=True, verbose=1
         )
@@ -333,7 +333,7 @@ def get_callback_from_config(config):
             monitor="val_loss", factor=0.5, patience=1, min_lr=1e-7, verbose=1
         )
     elif config["CALLBACK_OPTION"] == 1:
-        # Pour fine-tuning BERT (équilibré)
+        # For BERT fine-tuning (balanced)
         callback_es = EarlyStopping(
             monitor="val_loss",
             patience=3,
@@ -351,7 +351,7 @@ def get_callback_from_config(config):
             verbose=1,
         )
     elif config["CALLBACK_OPTION"] == 2:
-        # Pour fine-tuning BERT (équilibré un petit peu plus patient)
+        # For BERT fine-tuning (balanced, slightly more patient)
         callback_es = EarlyStopping(
             monitor="val_loss",
             patience=4,
@@ -369,7 +369,7 @@ def get_callback_from_config(config):
             verbose=1,
         )
     else:
-        # Pour entraînement long (patient)
+        # For long training (patient)
         callback_es = EarlyStopping(
             monitor="val_loss",
             patience=5,
@@ -402,7 +402,7 @@ def compile_and_train_model(
         loss="binary_crossentropy",
         metrics=["accuracy"],
     )
-    print("Modèle compilé")
+    print("Model compiled")
 
     tensorboard = TensorBoard(
         log_dir=f"{config["SAVE_FOLDER"]}/logs", histogram_freq=1, write_graph=True
@@ -412,7 +412,7 @@ def compile_and_train_model(
 
     callbacks_list = [callback_es, callback_lr, tensorboard, MemoryCallback()]
 
-    print("\nDébut de l'entraînement...")
+    print("\nStarting training...")
     print("=" * 80)
 
     if config["USE_TF_DATASET"] is True:
@@ -439,20 +439,20 @@ def compile_and_train_model(
 
         # steps_per_epoch=100
 
-    print("\nEntraînement terminé!")
+    print("\nTraining complete!")
 
     return history_bert_finetuned
 
 
 def evaluate_model(finetuned_model: keras.Model, X_test_bert, y_test, config: dict):
-    print("\nÉvaluation sur le test set...")
+    print("\nEvaluating on test set...")
     test_loss, test_accuracy = finetuned_model.evaluate(X_test_bert, y_test, verbose=0)
 
-    print("\nRésultats sur le test set:")
+    print("\nTest set results:")
     print(f"   - Test Loss: {test_loss:.4f}")
     print(f"   - Test Accuracy: {test_accuracy:.4f} ({test_accuracy*100:.2f}%)")
 
-    print("\nCalcul des prédictions...")
+    print("\nComputing predictions...")
     y_pred_prob = finetuned_model.predict(X_test_bert, verbose=0)
     y_pred = (y_pred_prob > 0.5).astype(int).flatten()
 
@@ -460,13 +460,13 @@ def evaluate_model(finetuned_model: keras.Model, X_test_bert, y_test, config: di
     print("\nClassification Report:")
     print("=" * 80)
     report_dict = classification_report(
-        y_test, y_pred, target_names=["Négatif", "Positif"], output_dict=True
+        y_test, y_pred, target_names=["Negative", "Positive"], output_dict=True
     )
-    print(classification_report(y_test, y_pred, target_names=["Négatif", "Positif"]))
+    print(classification_report(y_test, y_pred, target_names=["Negative", "Positive"]))
 
-    # Matrice de confusion
+    # Confusion matrix
     cm = confusion_matrix(y_test, y_pred)
-    print("\nMatrice de confusion:")
+    print("\nConfusion matrix:")
     print(cm)
 
     show_confusion_matrix(cm, f"{config['SAVE_FOLDER']}/confusion_matrix.png")
@@ -475,9 +475,9 @@ def evaluate_model(finetuned_model: keras.Model, X_test_bert, y_test, config: di
 
 
 def test_on_new_reviews(finetuned_model: keras.Model):
-    print("\nTests sur de nouvelles reviews...")
+    print("\nTesting on new reviews...")
 
-    # Reviews de test
+    # Test reviews
 
     test_reviews = [
         "This game was absolutely amazing! The graphics and gameplay was superb.",
@@ -488,18 +488,18 @@ def test_on_new_reviews(finetuned_model: keras.Model):
         "I loved every minute! The graphics were stunning.",
     ]
 
-    # Prédictions
+    # Predictions
     predictions_prob = finetuned_model.predict(test_reviews, verbose=0).flatten()
 
-    # Affichage des résultats
+    # Display results
     print("\n" + "=" * 90)
-    print("RÉSULTATS DES PRÉDICTIONS")
+    print("PREDICTION RESULTS")
     print("=" * 90)
 
     for i, (review, prob) in enumerate(zip(test_reviews, predictions_prob), 1):
-        sentiment = "POSITIF" if prob > 0.5 else "NÉGATIF"
+        sentiment = "POSITIVE" if prob > 0.5 else "NEGATIVE"
         confidence = prob if prob > 0.5 else 1 - prob
-        emoji = "✅" if sentiment == "POSITIF" else "❌"
+        emoji = "✅" if sentiment == "POSITIVE" else "❌"
 
         print(f'\n{i}. "{review}"')
         print(f"   {emoji} {sentiment} (Confiance: {confidence*100:.1f}%)")
@@ -520,47 +520,47 @@ def save_model_spec_and_eval(
         "learning_rate": config.get("LEARNING_RATE", 5e-5),
         "layer_architecture": config.get("LAYER_ARCHITECTURE", 0),
         "callback_strategy": config.get("CALLBACK_OPTION", 0),
-        # Métriques globales
+        # Global metrics
         "test_loss": test_loss,
         "test_accuracy": test_accuracy,
-        # Métriques par classe - Négatif
-        "negative_precision": report_dict["Négatif"]["precision"],
-        "negative_recall": report_dict["Négatif"]["recall"],
-        "negative_f1_score": report_dict["Négatif"]["f1-score"],
-        "negative_support": report_dict["Négatif"]["support"],
-        # Métriques par classe - Positif
-        "positive_precision": report_dict["Positif"]["precision"],
-        "positive_recall": report_dict["Positif"]["recall"],
-        "positive_f1_score": report_dict["Positif"]["f1-score"],
-        "positive_support": report_dict["Positif"]["support"],
-        # Moyennes
+        # Per-class metrics - Negative
+        "negative_precision": report_dict["Negative"]["precision"],
+        "negative_recall": report_dict["Negative"]["recall"],
+        "negative_f1_score": report_dict["Negative"]["f1-score"],
+        "negative_support": report_dict["Negative"]["support"],
+        # Per-class metrics - Positive
+        "positive_precision": report_dict["Positive"]["precision"],
+        "positive_recall": report_dict["Positive"]["recall"],
+        "positive_f1_score": report_dict["Positive"]["f1-score"],
+        "positive_support": report_dict["Positive"]["support"],
+        # Averages
         "macro_avg_precision": report_dict["macro avg"]["precision"],
         "macro_avg_recall": report_dict["macro avg"]["recall"],
         "macro_avg_f1_score": report_dict["macro avg"]["f1-score"],
         "weighted_avg_precision": report_dict["weighted avg"]["precision"],
         "weighted_avg_recall": report_dict["weighted avg"]["recall"],
         "weighted_avg_f1_score": report_dict["weighted avg"]["f1-score"],
-        # Matrice de confusion
+        # Confusion matrix
         "true_negative": int(cm[0, 0]),
         "false_positive": int(cm[0, 1]),
         "false_negative": int(cm[1, 0]),
         "true_positive": int(cm[1, 1]),
-        # Durée d'entraînement
+        # Training duration
         "duration": duration_str,
     }
 
-    # Créer un DataFrame avec une seule ligne
+    # Create a single-row DataFrame
     eval_df = pd.DataFrame([eval_results])
 
     outputs_dir = get_outputs_path()
 
-    # Chemin du fichier CSV
+    # CSV file path
     csv_path = f"{outputs_dir}/evaluation_results_{config['PHASE_NAME']}.csv"
 
-    # Sauvegarder (append si le fichier existe déjà)
+    # Save (append if file already exists)
     if os.path.exists(csv_path):
         existing_df = pd.read_csv(csv_path)
         eval_df = pd.concat([existing_df, eval_df], ignore_index=True)
 
-    # Sauvegarder
+    # Save
     eval_df.to_csv(csv_path, index=False)

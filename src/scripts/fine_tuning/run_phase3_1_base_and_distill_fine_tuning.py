@@ -9,11 +9,11 @@ def main(run_index=-1):
     #     "bert_base_en_uncased"
     # ]
 
-    # # Tester toutes les combinaisons LR + architectures
+    # # Test all LR + architecture combinations
     learning_rate_list = 3e-5
     layer_architecture_list = 1
-    subset_size = -1  # Toute les reviews
-    callback_s = 1  # 0 - 1 - 2 - 3 (plus rapide au plus patient)
+    subset_size = -1  # All reviews
+    callback_s = 1  # 0 - 1 - 2 - 3 (fastest to most patient)
 
     finetune_model_config = {
         "NAME_TRAIN_CONFIG": "Hyperparameter Search phase 1",
@@ -22,7 +22,7 @@ def main(run_index=-1):
         "REVIEWS_DATA_FILE": "reviews_en_processed.csv",
         "REVIEWS_SUBSET": subset_size,
         "BATCH_SIZE": 32,
-        "EPOCHS": 10,  # pour être sur car early stopping
+        "EPOCHS": 10,  # high value, early stopping will trigger
         "SEQUENCE_LENGTH": 512,
         "USE_TF_DATASET": False,  # opti batch memory
         "PLT_COLOR": "green",

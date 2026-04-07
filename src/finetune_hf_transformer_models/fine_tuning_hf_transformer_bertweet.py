@@ -1,4 +1,4 @@
-# Nécessite un autre environnement avec keras 2
+# Requires a separate environment with keras 2
 # pip install tf-keras
 
 import warnings
@@ -68,33 +68,33 @@ def train_bert_tweet_model(config: dict):
 
     start_time = time.time()
 
-    init_gpu_for_tf()  # Utilisation de la GPU pour TensorFlow (si disponible)
-    init_graph_plt()  # Initialisation de matplotlib (pour graphiques)
-    init_seed(config["SEED"])  # Initialisation seed reproductibilité
+    init_gpu_for_tf()  # Use GPU for TensorFlow (if available)
+    init_graph_plt()  # Initialize matplotlib for plots
+    init_seed(config["SEED"])  # Initialize seed for reproducibility
     show_tf_keras_version_engine()
 
     config["SAVE_FOLDER"] = get_outputs_path(f'reports/{config["SAVE_FOLDER"]}')
-    print(f"Création dossier reports: {config["SAVE_FOLDER"]}")
+    print(f"Creating reports folder: {config["SAVE_FOLDER"]}")
 
-    df_reviews = load_and_verif_reviews_datas(config)  # Chargmenet des données
+    df_reviews = load_and_verif_reviews_datas(config)  # Load data
 
     X_train, y_train, X_val, y_val, X_test, y_test = create_train_test_eval_split(
         df_reviews, config
     )
 
-    # Créer le modèle
+    # Build model
     model, tokenizer = build_bertweet_model(config)
 
-    print("\nArchitecture du modèle:")
+    print("\nModel architecture:")
     model.summary()
 
-    # Tokenizer les données
-    print("\nTokenization des données...")
+    # Tokenize data
+    print("\nTokenizing data...")
     X_train_encoded = tokenize_texts(X_train, tokenizer, config["SEQUENCE_LENGTH"])
     X_val_encoded = tokenize_texts(X_val, tokenizer, config["SEQUENCE_LENGTH"])
     X_test_encoded = tokenize_texts(X_test, tokenizer, config["SEQUENCE_LENGTH"])
 
-    # Compiler
+    # Compile
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=config["LEARNING_RATE"]),
         loss="binary_crossentropy",
@@ -104,7 +104,7 @@ def train_bert_tweet_model(config: dict):
     callback_es, callback_lr = get_callback_from_config(config)
     callbacks_list = [callback_es, callback_lr, MemoryCallback()]
 
-    # Entraîner
+    # Train
     model.fit(
         {
             "input_ids": X_train_encoded["input_ids"],
@@ -128,39 +128,39 @@ def train_bert_tweet_model(config: dict):
     if not os.path.exists(config["SAVE_FOLDER"]):
         os.makedirs(config["SAVE_FOLDER"])
 
-    # Visualisation des courbes d'apprentissage
+    # Plot learning curves
     models_histories = [(config["NAME_TRAIN_CONFIG"], model, config["PLT_COLOR"])]
 
     show_model_train_history(
         models_histories, f"{config['SAVE_FOLDER']}/train_history.png"
     )
 
-    # Evaluation finale
+    # Final evaluation
     test_loss, test_accuracy, report_dict, cm = evaluate_model(
         model, X_test_encoded, y_test, config
     )
 
-    # Calculer la durée
+    # Compute training duration
     training_duration = time.time() - start_time
     duration_str = str(timedelta(seconds=int(training_duration)))
 
-    print(f"\nDurée d'entraînement: {duration_str}")
+    print(f"\nTraining duration: {duration_str}")
 
-    # Sauvegarde des résultats pour comparaison ultérieur
+    # Save results for later comparison
     save_model_spec_and_eval(
         config, test_loss, test_accuracy, report_dict, cm, duration_str
     )
 
     model_path = f"{config['SAVE_FOLDER']}/finetuned_model.keras"
     model.save(model_path)
-    print(f"Modèle sauvegardé: {model_path}")
+    print(f"Model saved: {model_path}")
 
 
 def build_bertweet_model(config: dict):
     model_name = "vinai/bertweet-base"
     sequence_length = config["SEQUENCE_LENGTH"]
 
-    print("\nChargement de BERTweet...")
+    print("\nLoading BERTweet...")
 
     # Tokenizer et backbone
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -194,17 +194,17 @@ def build_bertweet_model(config: dict):
 
     outputs = layers.Dense(1, activation="sigmoid")(x)
 
-    # Créer le modèle
+    # Build model
     model = keras.Model(inputs=[input_ids, attention_mask], outputs=outputs)
 
-    print("Modèle BERTweet créé")
+    print("BERTweet model created")
 
     return model, tokenizer
 
 
 def tokenize_texts(texts, tokenizer, max_length=128):
     """
-    Tokenize les textes avec le tokenizer BERTweet
+    Tokenize texts with the BERTweet tokenizer
     """
     return tokenizer(
         texts.tolist() if hasattr(texts, "tolist") else list(texts),

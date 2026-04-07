@@ -1,5 +1,5 @@
 """
-Fonctions utilitaires pour le traitement des reviews Steam
+Utility functions for Steam reviews processing
 """
 
 import re
@@ -13,14 +13,14 @@ def column_summary(df: pd.DataFrame):
         non_null = df[col].notna().sum()
         null_count = df[col].isna().sum()
 
-        # Gérer le cas où la colonne contient des listes (unhashable)
+        # Handle the case where the column contains lists (unhashable)
         try:
             unique_count = df[col].nunique()
         except TypeError:
-            # Si erreur (listes), convertir en string temporairement
+            # If error (lists), convert to string temporarily
             unique_count = df[col].astype(str).nunique()
             print(
-                f"⚠️ Colonne '{col}' contient des types non-hashable (probablement des listes)"
+                f"⚠️ Column '{col}' contains non-hashable types (probably lists)"
             )
 
         summary.append(
@@ -33,9 +33,9 @@ def column_summary(df: pd.DataFrame):
             }
         )
 
-    # Afficher le résumé des colonnes
+    # Display column summary
     print("=" * 80)
-    print("Résumé détaillé des colonnes:")
+    print("Detailed column summary:")
     print("=" * 80)
     column_summary_df = pd.DataFrame(summary)
     print(column_summary_df.to_string(index=False))
@@ -54,8 +54,8 @@ def print_voted_up_count_proportion(df: pd.DataFrame):
         )
 
     print(
-        f"\nPour obtenir une distribution équilibrée 50/50, en sous échantillonnant la classe majoritaire\n"
+        "\nTo get a balanced 50/50 distribution by undersampling the majority class:\n"
     )
     print(
-        f"On aurait {min(voted_up_counts)} reviews par classe. Soit un total de {2 * min(voted_up_counts)} reviews."
+        f"We would have {min(voted_up_counts)} reviews per class, for a total of {2 * min(voted_up_counts)} reviews."
     )

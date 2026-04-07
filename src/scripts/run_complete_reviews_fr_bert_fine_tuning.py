@@ -21,14 +21,14 @@ from src.utils.stats_utils import show_stats_compare_train_evaluation
 # }
 
 # process_reviews_config_example = {
-#     "PLAY_TIME_FOREVER": 30,  # minutes passées sur le jeux avant d'écrire la review
-#     "MIN_WORD_COUNT": 10,  # compromis pour ne pas perdre le signal du sentiment si trop court
-#     "MAX_WORD_COUNT": 400,  # essayer de garder des reviews completes non tronqués (contrainte taille max tokenizer)
-#     "WEIGHTED_VOTE_SCORE": 0.5,  # on filtre les reviews avec un score de qualité donné par steam (minimiser celles écritent par des bots)
-#     "STEAM_PURCHASE": True,  # Joueur légitime achat vérifié
-#     "RECEIVED_FOR_FREE": False,  # Pas reçu gratuitement (ça biaise le vote)
-#     "CLEAN_HTML_TAGS": True,  # On nettois la reviews des tags html (valeur faible pour le signal de sentiment)
-#     "REMOVE_ASCCI_ART_REVIEWS": True,  # On supprime les reviews composé essentiellement d'ascii art
+#     "PLAY_TIME_FOREVER": 30,  # minutes of playtime before writing the review
+#     "MIN_WORD_COUNT": 10,  # trade-off to keep sentiment signal (too short = unreliable)
+#     "MAX_WORD_COUNT": 400,  # keep complete reviews, avoid truncation (tokenizer max size constraint)
+#     "WEIGHTED_VOTE_SCORE": 0.5,  # filter by Steam quality score (minimize bot-written reviews)
+#     "STEAM_PURCHASE": True,  # legitimate player with verified purchase
+#     "RECEIVED_FOR_FREE": False,  # not received for free (biases the vote)
+#     "CLEAN_HTML_TAGS": True,  # strip HTML tags from reviews (low sentiment signal value)
+#     "REMOVE_ASCCI_ART_REVIEWS": True,  # remove reviews composed mostly of ASCII art
 # }
 
 EXTRACT_LANG_PASS = False
@@ -99,14 +99,14 @@ def main():
         "CALLBACK_OPTION": 1,
         "REVIEWS_SUBSET": -1,
         "BATCH_SIZE": 32,
-        "EPOCHS": 10,  # pour être sur car early stopping
+        "EPOCHS": 10,  # high value, early stopping will trigger
         "SEQUENCE_LENGTH": 128,
         "USE_TF_DATASET": False,
         "PLT_COLOR": "green",
     }
 
     try:
-        # Entraîner le modèle
+        # Train the model
         start_time = datetime.now()
 
         model_finetuned_path = train_bert_base_model(bert_model_config)
@@ -114,7 +114,7 @@ def main():
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
 
-        # Stocker les résultats
+        # Store results
         result = {
             "run_number": bert_model_config["NAME_TRAIN_CONFIG"],
             "variant": preset_model_name,
@@ -128,7 +128,7 @@ def main():
 
     except Exception as e:
         print(
-            f"\nErreur durant le run complete pipeline: {e} - confg {bert_model_config}"
+            f"\nError during complete pipeline run: {e} - config {bert_model_config}"
         )
 
     # outputs_dir = get_outputs_path()

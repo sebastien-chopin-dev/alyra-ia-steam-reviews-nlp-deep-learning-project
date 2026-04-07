@@ -4,21 +4,21 @@ import seaborn as sns
 
 
 def column_summary(df: pd.DataFrame):
-    """Affiche un résumé détaillé des colonnes du DataFrame"""
+    """Display a detailed summary of the DataFrame columns"""
     summary = []
     for col in df.columns:
         col_type = df[col].dtype
         non_null = df[col].notna().sum()
         null_count = df[col].isna().sum()
 
-        # Gérer le cas où la colonne contient des listes (unhashable)
+        # Handle the case where the column contains lists (unhashable)
         try:
             unique_count = df[col].nunique()
         except TypeError:
-            # Si erreur (listes), convertir en string temporairement
+            # If error (lists), convert to string temporarily
             unique_count = df[col].astype(str).nunique()
             print(
-                f"⚠️ Colonne '{col}' contient des types non-hashable (probablement des listes)"
+                f"⚠️ Column '{col}' contains non-hashable types (probably lists)"
             )
 
         summary.append(
@@ -31,9 +31,9 @@ def column_summary(df: pd.DataFrame):
             }
         )
 
-    # Afficher le résumé des colonnes
+    # Display column summary
     print("=" * 80)
-    print("Résumé détaillé des colonnes:")
+    print("Detailed column summary:")
     print("=" * 80)
     column_summary_df = pd.DataFrame(summary)
     print(column_summary_df.to_string(index=False))
@@ -42,18 +42,18 @@ def column_summary(df: pd.DataFrame):
 
 def show_model_train_history(history, save_path: str):
     """
-    Affiche l'historique d'entraînement d'un ou plusieurs modèles
+    Display the training history of one or more models
 
     Args:
-        history: Liste de tuples (name, history_object, color)
-        save_path: Chemin pour sauvegarder le graphique
+        history: List of tuples (name, history_object, color)
+        save_path: Path to save the plot
     """
     n_models = len(history)
 
-    # Créer les subplots
+    # Create subplots
     fig, axes = plt.subplots(2, n_models, figsize=(6 * n_models, 10))
 
-    # Si un seul modèle, axes n'est pas automatiquement un array 2D
+    # If a single model, axes is not automatically a 2D array
     if n_models == 1:
         axes = axes.reshape(2, 1)
 
@@ -109,7 +109,7 @@ def show_model_train_history(history, save_path: str):
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
-    print(f"Graphiques sauvegardés: {save_path}")
+    print(f"Plots saved: {save_path}")
     plt.close()
 
 
@@ -120,24 +120,24 @@ def show_confusion_matrix(cm, save_path: str):
         annot=True,
         fmt="d",
         cmap="Blues",
-        xticklabels=["Négatif", "Positif"],
-        yticklabels=["Négatif", "Positif"],
+        xticklabels=["Negative", "Positive"],
+        yticklabels=["Negative", "Positive"],
     )
-    plt.title("Matrice de Confusion", fontsize=14, fontweight="bold")
-    plt.ylabel("Vraie classe")
-    plt.xlabel("Classe prédite")
+    plt.title("Confusion Matrix", fontsize=14, fontweight="bold")
+    plt.ylabel("True label")
+    plt.xlabel("Predicted label")
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
-    print(f"Matrice de confusion sauvegardée: {save_path}")
+    print(f"Confusion matrix saved: {save_path}")
 
 
 def compare_evaluation_results(csv_path: str):
     df = pd.read_csv(csv_path)
 
     print("\n" + "=" * 80)
-    print("COMPARAISON DES MODÈLES")
+    print("MODEL COMPARISON")
     print("=" * 80)
 
-    # Colonnes principales à afficher
+    # Main columns to display
     columns_to_display = [
         "timestamp",
         "model_name",
@@ -150,12 +150,12 @@ def compare_evaluation_results(csv_path: str):
 
     print(df[columns_to_display].to_string(index=False))
 
-    # Meilleur modèle par accuracy
+    # Best model by accuracy
     best_accuracy_idx = df["test_accuracy"].idxmax()
     best_model = df.loc[best_accuracy_idx]
 
     print("\n" + "=" * 80)
-    print("🏆 MEILLEUR MODÈLE (Accuracy)")
+    print("🏆 BEST MODEL (Accuracy)")
     print("=" * 80)
     print(f"Nom: {best_model['model_name']}")
     print(f"Preset: {best_model['preset']}")
@@ -163,15 +163,15 @@ def compare_evaluation_results(csv_path: str):
     print(f"F1-Score (macro): {best_model['macro_avg_f1_score']:.4f}")
     print(f"Date: {best_model['timestamp']}")
 
-    # Visualisation
+    # Visualization
     plt.figure(figsize=(12, 5))
 
     # Subplot 1: Accuracy
     plt.subplot(1, 2, 1)
     plt.plot(df.index, df["test_accuracy"], marker="o", linewidth=2)
-    plt.xlabel("Expérience")
+    plt.xlabel("Experiment")
     plt.ylabel("Test Accuracy")
-    plt.title("Évolution de l'Accuracy")
+    plt.title("Accuracy Progress")
     plt.grid(True, alpha=0.3)
 
     # Subplot 2: F1-Score
@@ -179,9 +179,9 @@ def compare_evaluation_results(csv_path: str):
     plt.plot(
         df.index, df["macro_avg_f1_score"], marker="o", linewidth=2, color="orange"
     )
-    plt.xlabel("Expérience")
+    plt.xlabel("Experiment")
     plt.ylabel("Macro F1-Score")
-    plt.title("Évolution du F1-Score")
+    plt.title("F1-Score Progress")
     plt.grid(True, alpha=0.3)
 
     plt.tight_layout()
@@ -192,14 +192,14 @@ def compare_evaluation_results(csv_path: str):
 def show_stats_compare_train_evaluation(df: pd.DataFrame, best_count=6):
     df["duration_seconds"] = pd.to_timedelta(df["duration"]).dt.total_seconds()
 
-    print("Analyse des Résultats")
+    print("Results Analysis")
 
     print(f"Nombre de runs : {len(df)}")
     print(f"Dataset : {df['reviews_subset'].iloc[0]:,} reviews")
     print()
 
     # Top Configurations
-    print(f"Top {best_count} Meilleures Configurations")
+    print(f"Top {best_count} Best Configurations")
     print("=" * 80)
 
     top6 = df.nlargest(best_count, "test_accuracy")[
@@ -229,29 +229,29 @@ def show_stats_compare_train_evaluation(df: pd.DataFrame, best_count=6):
     print(top6.to_string())
     print()
 
-    # Statistiques Globales
-    print("Statistiques Globales")
+    # Global Statistics
+    print("Global Statistics")
     print("=" * 80)
 
     stats_df = pd.DataFrame(
         {
-            "Métrique": ["Accuracy", "F1-Score (Macro)", "Loss"],
-            "Meilleur": [
+            "Metric": ["Accuracy", "F1-Score (Macro)", "Loss"],
+            "Best": [
                 f"{df['test_accuracy'].max():.4f}",
                 f"{df['macro_avg_f1_score'].max():.4f}",
                 f"{df['test_loss'].min():.4f}",
             ],
-            "Pire": [
+            "Worst": [
                 f"{df['test_accuracy'].min():.4f}",
                 f"{df['macro_avg_f1_score'].min():.4f}",
                 f"{df['test_loss'].max():.4f}",
             ],
-            "Moyenne": [
+            "Mean": [
                 f"{df['test_accuracy'].mean():.4f}",
                 f"{df['macro_avg_f1_score'].mean():.4f}",
                 f"{df['test_loss'].mean():.4f}",
             ],
-            "Écart-type": [
+            "Std Dev": [
                 f"{df['test_accuracy'].std():.4f}",
                 f"{df['macro_avg_f1_score'].std():.4f}",
                 f"{df['test_loss'].std():.4f}",
@@ -267,13 +267,13 @@ def show_stats_compare_train_evaluation(df: pd.DataFrame, best_count=6):
 
     recommendations = pd.DataFrame(
         {
-            "Hyperparamètre": [
+            "Hyperparameter": [
                 "Learning Rate",
                 "Architecture",
                 "Callback Strategy",
-                "Accuracy Obtenue",
+                "Achieved Accuracy",
             ],
-            "Valeur Optimale": [
+            "Optimal Value": [
                 f"{best_run['learning_rate']}",
                 f"{int(best_run['layer_architecture'])}",
                 f"{int(best_run['callback_strategy'])}",
@@ -287,13 +287,13 @@ def show_stats_compare_train_evaluation(df: pd.DataFrame, best_count=6):
 
 
 def show_plt_distribution_accuracy_result(df: pd.DataFrame):
-    # Créer un label pour chaque configuration
+    # Create a label for each configuration
     df["config"] = df.apply(
         lambda x: f"LR:{x['learning_rate']:.0e}\nArch:{int(x['layer_architecture'])}\nCB:{int(x['callback_strategy'])}",
         axis=1,
     )
 
-    # Graphique
+    # Chart
     plt.figure(figsize=(14, 6))
     bars = plt.bar(
         range(len(df)), df["test_accuracy"], color="steelblue", edgecolor="black"
@@ -301,13 +301,13 @@ def show_plt_distribution_accuracy_result(df: pd.DataFrame):
 
     plt.xlabel("Configuration")
     plt.ylabel("Test Accuracy")
-    plt.title("Test Accuracy - Toutes les Configurations")
+    plt.title("Test Accuracy - All Configurations")
     plt.xticks(range(len(df)), range(1, len(df) + 1), rotation=0)
 
-    # ZOOM sur l'axe Y
+    # Zoom Y axis
     min_acc = df["test_accuracy"].min()
     max_acc = df["test_accuracy"].max()
-    margin = (max_acc - min_acc) * 0.1  # 10% de marge
+    margin = (max_acc - min_acc) * 0.1  # 10% margin
     plt.ylim(min_acc - margin, max_acc + margin)
 
     plt.axhline(

@@ -184,6 +184,10 @@ curl -X POST http://localhost:8000/predict \
 
 ### Requirements
 
+- Deep learning experiment requires a graphics card with a significant amount of VRAM. 
+- (> 10 GB VRAM minimum and > 16 GB VRAM recommended)
+- I made my expriment with an Nvidia RTX 4070 (12gb VRAM). 
+
 ```bash
 # GPU (recommended)
 pip install tensorflow[and-cuda]
@@ -197,6 +201,9 @@ pip install tensorflow
 pip install keras tensorflow matplotlib jupyter pandas numpy scipy \
   scikit-learn scikeras[tensorflow] optuna GPUtil seaborn \
   keras-nlp datasets kagglehub[pandas-datasets] vaderSentiment
+
+# or with the requirments.txt
+pip install -r requirements.txt
 ```
 
 ### Verify TensorFlow + GPU

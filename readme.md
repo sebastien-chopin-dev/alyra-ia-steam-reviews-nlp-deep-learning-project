@@ -1,4 +1,4 @@
-# Steam Reviews Sentiment Analysis — NLP Deep Learning
+# Steam Reviews Sentiment Analysis — NLP Deep Learning  — BERT Finetuning
 
 **Alyra Project — Deep Learning**
 
